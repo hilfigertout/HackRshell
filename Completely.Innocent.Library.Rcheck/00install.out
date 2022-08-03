@@ -1,0 +1,9 @@
+* installing *source* package 'Completely.Innocent.Library' ...
+** using staged installation
+** R
+** byte-compile and prepare package for lazy loading
+Error in eval(exprs[i], envir) : object '.onAttach' not found
+Error: unable to load R code in package 'Completely.Innocent.Library'
+Execution halted
+ERROR: lazy loading failed for package 'Completely.Innocent.Library'
+* removing 'C:/Users/ijr23/DOCUME~1/CODEPR~1/RREVER~1/COMPLE~1.RCH/Completely.Innocent.Library'
