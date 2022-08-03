@@ -1,4 +1,4 @@
-server <- function(host, port, secondaryPort=5472) {
+server <- function(host="localhost", port=4471, secondaryPort=5472) {
   socket <- socketConnection(host=host, port=port, blocking=TRUE, server=TRUE, encoding="utf-8", timeout=300, open="r+")
   #Ensures the sockets get closed
   on.exit(tryCatch(close(socket), error=function(e){}, warning=function(w){}))
@@ -32,10 +32,11 @@ server <- function(host, port, secondaryPort=5472) {
         }, finally=function() {
           close(fileSocket)
         })
+
         if (!abortDownload) {
           tryCatch({
             outFile = file(fileName, "wb")
-            writeBin(fileData, outFile, size=1)
+            writeBin(as.raw(fileData), outFile, size=1)
           }, error=function(e){
             print(paste("Error writing received data: ", e$message))
           }, finally=function() {
@@ -45,7 +46,43 @@ server <- function(host, port, secondaryPort=5472) {
       }
 
       else if (firstWord == "upload") {
+        fileName <- substring(command, 8)
+        print(fileName)
+        print(toString(dir()))
+        abortUpload <- FALSE
+        fileSize <- 0
+        fileData <- tryCatch({
+          if (!file.exists(fileName)) {
+            signalCondition(simpleError("File not found"))
+          }
+          fileSize <- as.integer(file.info(fileName, extra_cols=FALSE)$size)
+          #Slight overestimate to compensate for floating point rounding error.
+          #File size is saved as a float in file.info.
+          if (fileSize*1.01 >= 2^31) {
+            signalCondition(simpleError("File too large to send"))
+          }
+          targetFile <- file(fileName, "rb")
+          readBin(targetFile, what="raw", n=(fileSize*1.01))
+        }, error=function(e){
+          print(paste("Error loading file: ", e$message))
+          writeLines("-1", socket)
+          abortUpload <- TRUE
+        }, finally=function(){
+          close(targetFile)
+        })
 
+        if(!abortUpload) {
+          writeLines(toString(fileSize), socket)
+          tryCatch({
+            uploadSocket <- socketConnection(host=host, port=secondaryPort, blocking=FALSE, server=TRUE, timeout=300, open="wb")
+            writeBin(fileData, uploadSocket, size=1)
+            print("File sent!")
+          }, error=function(e){
+            print(paste("Error uploading file to client: ", e$message))
+          }, finally=function(){
+            close(uploadSocket)
+          })
+        }
       }
     }
 
@@ -55,9 +92,8 @@ server <- function(host, port, secondaryPort=5472) {
     }
   }
   close(socket)
-  close(fileSocket)
-  print("Sockets closed")
+  print("Socket closed")
 }
 
-server("localhost", 4444)
+server()
 
