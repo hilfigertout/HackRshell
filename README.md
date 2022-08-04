@@ -24,7 +24,7 @@ This reverse shell is written entirely in base R, with no additional packages ne
 
 To run this program, you will need to have R installed. To start the server, simply open an R session and call the `server()` function located in *server.R*. This will start the server listening. From there it's simply a matter of waiting for someone to run the `client()` function with the correct address and port.
 
-Since it's safe to assume you are probably demonstrating this on your own machine, you can create a new R session and run the function yourself. You can either run the function in *client.R*, or you can attach the malicious package with the command `library(Completely.Innocent.Library)`. This will automatically start the `client()` function with the parameters baked into the library, so if you want to change the ip address or ports that the server is on from the defaults, you will need to rebuild the library after every change.  
+Since it's safe to assume you are probably demonstrating this on your own machine, you can create a new R session and run the function yourself. You can either run the function in *client.R*, or you can attach the malicious package with the command `library(Completely.Innocent.Library)`. This will automatically start the `client()` function with the parameters baked into the library, so if you want to change the ip address or ports that the server is on from the defaults, you will need to rebuild the library after every change. 
 
 Once the `client()` function runs, the target's R session will hang and (if the connection goes through) you should see the following prompt on the server side:
 
@@ -32,7 +32,7 @@ Once the `client()` function runs, the target's R session will hang and (if the 
 Shell>
 ```
 
-From here you can start running the commands below. Once you are finished, use the `exit` command to close the socket and the shell. 
+From here you can start running the commands below. Once you are finished, use the `exit` command to close the socket and the shell. If the server is not up and listening, then the connection will fail and the `client()` function will terminate. If the target loaded the library to call `client()`, this will happen without any notice. If the target ran the `client()` function manually, they will get a warning that the connection failed.
 
 ## List of Commands:
 
@@ -69,6 +69,8 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 - If you upload or download a file using this shell, that file will not be able to be edited while the R session is active as it is considered still locked by the R session. This also prevents you from deleting a file after uploading or downloading it. In addition, for a file uploaded to the client, the data inside will not appear until the R session terminates, meaning that at present it is not possible to upload an additional payload and run it.
 
 - Sometimes clients just stop responding after trying a particularly sensitive command, especially a failed system call. I've tried to iron out as many cases as possible, but at the end of the day, most computers' environments are not friendly to reverse shells. 
+
+- The target R session very obviously hangs when the reverse shell starts. This is something that listed in the next section as a potential improvement and is a likely next step, but the benefit of this library as it stands is that it runs entirely in base R. This means no additional packages are required to run this reverse shell on either the client or the server side. Parallel computing or process interaction packages would be required to spawn a new R session, though this can be camouflaged by adding these libraries as a dependency to the malicious package. 
 
 ## Potential Improvements: 
 
