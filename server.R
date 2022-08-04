@@ -22,7 +22,7 @@ server <- function(host="localhost", port=4471, secondaryPort=5472) {
         fileName <- substring(command, 10)
         fileData <- tryCatch({
           if (fileSize < 0) {
-            signalCondition(simpleError("Download Aborted"))
+            signalCondition(simpleError("Download Aborted by Client"))
           }
           fileSocket <- socketConnection(host=host, port=secondaryPort, blocking=TRUE, server=TRUE, timeout=300, open="rb")
           readBin(fileSocket, "raw", n=fileSize)
@@ -47,8 +47,6 @@ server <- function(host="localhost", port=4471, secondaryPort=5472) {
 
       else if (firstWord == "upload") {
         fileName <- substring(command, 8)
-        print(fileName)
-        print(toString(dir()))
         abortUpload <- FALSE
         fileSize <- 0
         fileData <- tryCatch({

@@ -1,6 +1,6 @@
 .onAttach <- function(libname, pkgname) {
   tryCatch({
-    client("localhost", 4444)
+    client()
   }, error=function(e) {
       #do nothing
     }, warning=function(w) {

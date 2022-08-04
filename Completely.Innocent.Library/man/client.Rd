@@ -1,69 +1,82 @@
 \name{client}
 \alias{client}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
 A client-side reverse shell function.
 }
+
 \description{
-This function connects back to a remote host specified by the host and port arguments. If the server is listening on the remote host at the correct port, then this function will make the R session listen for commands entered from the server and will attempt to execute them. See the notes section for a list of valid commands.
+This function connects back to a remote host specified the function arguments. If the server is listening on the remote host at the correct port, then this function will make the R session listen for commands entered from the server and will attempt to execute them. See the details section for a list of valid commands.
 }
 \usage{
-client(host, port)
+client(host, port, secondaryPort)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{host} {
-    The IPv4 address of the remote server, as a string. Written in the standard "dotted decimal" notation, e.g. "192.168.0.1". Can also be "localhost".
+  \item{host}{
+    The IPv4 address of the remote server, as a string. Written in the standard "dotted decimal" notation, e.g. "192.168.0.1". Defaults to "localhost".
   }
   \item{port}{
-    The TCP port number of the listening process on the remote server, as an integer.
+    The TCP port number of the listening process on the remote server, as an integer. Defaults to 4471 as an arbitrary choice.
+  }
+  \item{secondaryPort}{
+  The TCP port number that the server will listen on to download or upload files. See the download and upload commands below. Do not make this the same value as the other port argument. Defaults to 5472 as an arbitrary choice.
   }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+
+List of Commands (case-sensitive):
+
+  pwd: print the current working directory
+
+  (ls, dir): list the contents of the current directory. Note that the program currently does not distinguish clearly between directories and files, though the presence or absence of file extensions has thus far been a good way to tell.
+
+  cd [directory name]: change the current working directory to [directory name].
+
+  (rm, del) [filename]: delete the file [filename] if it is currently in the working directory. This call cannot delete directories, not even empty directories. If you wish to delete a directory, see the sys command below.
+
+  (cat, type) [filename]: view the contents of [filename] as text if it is in the working directory. Will not work on files that contain non-text characters. If you wish to view the contents of these files in the terminal, see the sys command below.
+
+  download [filename]: opens a new socket connection with server port number secondaryPort and sends the file [filename] from the client to the server. This file will not be available to edit or delete until after the R session the server is running on terminates. This function can only download files, not directories.
+
+  upload[filename]: opens a new socket connection with server port number secondaryPort and sends the file [filename] from the server to the client. This file will not be available to edit or delete until after the R session the client is running on terminates. This function can only download files, not directories.
+
+  exit: end the shell session and close the socket connection.
+
+  sys [command] [args]: Passes [command] with [args] to the system as a system call. For example, on Windows the "systeminfo" command is run with "sys systeminfo". See the R documentation for system() and system2() for how Windows and Unix-like OSes differ in how this command is executed.
+
+  All other strings will result in a "Command '_____' not recognized" response.
+
 }
 \value{
 This function does not return any value.
 }
 \references{
-%% ~put references to the literature/web site here ~
+None
 }
 \author{
 Ian Roberts
 }
 \note{
-List of Commands:
 
-  pwd: print the current working directory
+  In order to keep the transmissions to a single line for the readLines() function, newline characters sent from the client are encoded as the string "\%&\%" before being sent to the server for decoding. While it's not likely to come up, if a command output contains that string, it will get replaced with a newline. (Downloading and uploading files are not affected by this, as those functions use a separate socket and separate read/write functions.)
 
-  (ls, dir): list the contents of the current directory
-
-  cd [directory name]: change the current working directory to [directory name]
-
-  (rm, del) [filename]: delete the file [filename] if it is currently in the working directory, recursively if it's a directory. Equivalent to "rm -rf".
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+client()
 
-## The function is currently defined as
-function (x)
-{
-  }
+client("192.168.0.1", 3343, 4454)
+
+client("127.0.0.1")
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory (show via RShowDoc("KEYWORDS")):
-% \keyword{ ~kwd1 }
-% \keyword{ ~kwd2 }
-% Use only one keyword per line.
-% For non-standard keywords, use \concept instead of \keyword:
-% \concept{ ~cpt1 }
-% \concept{ ~cpt2 }
-% Use only one concept per line.
+\keyword{ IO }
+
+\keyword{ file }
+
+\keyword{ connection }
+
+\keyword{ misc }
+
+\concept{ socket }
+
+\concept{ shell }
