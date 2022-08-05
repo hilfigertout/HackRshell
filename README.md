@@ -2,7 +2,7 @@
 
 ## The R Reverse Shell 
 
-This project implements a basic reverse shell in R. When a target runs the `client()` function in this package (either directly or on attachment of the package), their R session will attempt to reach out to a server running the `server()` function in *server.R*. If the server is listening, the user behind the server will then be able to send commands to traverse the target's directory, upload or exfiltrate files, and make system calls. A full list of commands can be found below.
+This project implements a basic reverse shell in R. When a target runs the `client()` function in this package (either directly or on attachment of the package), their R session will attempt to reach out to a server running the `server()` function in *HackRshell-HackRshell-Server.R*. If the server is listening, the user behind the server will then be able to send commands to traverse the target's directory, upload or exfiltrate files, and make system calls. A full list of commands can be found below.
 
 This reverse shell is written entirely in base R, with no additional packages needing installed. In addition, the *Completely.Innocent.Library* package is a custom-built malicious package designed exclusively to execute the `client()` function when the package is attached. This is to demonstrate how a target could unsuspectingly open the connection. It is not necessary to install this library to run the reverse shell, see the **Usage** section below. 
 
@@ -12,19 +12,19 @@ This reverse shell is written entirely in base R, with no additional packages ne
 
  - **LICENSE** - this software is under the Lesser GNU public license (LGPL). See the file for deatils.
 
- - **server.R** - This file contains the `server()` function that the user runs to listen for reverse shell connections.
+ - **HackRshell-Server.R** - This file contains the `server()` function that the user runs to listen for reverse shell connections.
 
- - **client.R** - this file contains the `client()` function that the target runs to start the reverse shell session. While one can load the function and call it via the R terminal, running `source("./client.R")` will do the same thing, assuming that the working directory contains client.R.
+ - **HackRshell-Client.R** - this file contains the `client()` function that the target runs to start the reverse shell session. While one can load the function and call it via the R terminal, running `source("./HackRshell-Client.R")` will do the same thing, assuming that the working directory contains HackRshell-Client.R.
 
- - **Completely.Innocent.Library** - this folder contains the R project and all the data for a custom R package called "Completely.Innocent.Library". This package contains a *client.R* file, identical to the one in the top level of the repository except for the function call at the end. This package was built to execute the `client()` function when the target installs the package and calls `library("Completely.Innocent.Library")`. You can see the code for this autorun in *Completely.Innocent.Library/R/zzz.R*.
+ - **Completely.Innocent.Library** - this folder contains the R project and all the data for a custom R package called "Completely.Innocent.Library". This package contains a *HackRshell-Client.R* file, identical to the one in the top level of the repository except for the function call at the end. This package was built to execute the `client()` function when the target installs the package and calls `library("Completely.Innocent.Library")`. You can see the code for this autorun in *Completely.Innocent.Library/R/zzz.R*.
 
- - **Completely.Innocent.Library_0.1.0.tar.gz** - a tarball of the *Completely.Innocent.Library* package for installation. You will need the rtools package to install this, which you can find [here](https://cran.r-project.org/bin/windows/Rtools/).
+ - **Completely.Innocent.Library_0.1.0.tar.gz** - a tarball of the *Completely.Innocent.Library* package for installation. You will need the rtools package to install this, which you can find [here](https://cran.r-project.org/bin/windows/Rtools/). Once that's downloaded, instructions for installing the package can be found in [this StackOverflow thread](https://stackoverflow.com/questions/4739837/how-do-i-install-an-r-package-from-the-source-tarball-on-windows).
 
 ## Usage: 
 
-To run this program, you will need to have R installed. To start the server, simply open an R session and call the `server()` function located in *server.R*. This will start the server listening. From there it's simply a matter of waiting for someone to run the `client()` function with the correct address and port.
+To run this program, you will need to have R installed. To start the server, simply open an R session and call the `server()` function located in *HackRshell-Server.R*. This will start the server listening. From there it's simply a matter of waiting for someone to run the `client()` function with the correct address and port.
 
-Since it's safe to assume you are probably demonstrating this on your own machine, you can create a new R session and run the function yourself. You can either run the function in *client.R*, or you can attach the malicious package with the command `library(Completely.Innocent.Library)`. This will automatically start the `client()` function with the parameters baked into the library, so if you want to change the ip address or ports that the server is on from the defaults, you will need to rebuild the library after every change. 
+Since it's safe to assume you are probably demonstrating this on your own machine, you can create a new R session and run the function yourself. You can either run the function in *HackRshell-Client.R*, or you can attach the malicious package with the command `library(Completely.Innocent.Library)`. This will automatically start the `client()` function with the parameters baked into the library, so if you want to change the ip address or ports that the server is on from the defaults, you will need to rebuild the library after every change. 
 
 Once the `client()` function runs, the target's R session will hang and (if the connection goes through) you should see the following prompt on the server side:
 
@@ -74,7 +74,7 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
 - The target R session very obviously hangs when the reverse shell starts. This is something that listed in the next section as a potential improvement and is a likely next step, but the benefit of this library as it stands is that it runs entirely in base R. This means no additional packages are required to run this reverse shell on either the client or the server side. Parallel computing or process interaction packages would be required to spawn a new R session, though this can be camouflaged by adding these libraries as a dependency to the malicious package. 
 
-- As of 4 August 2022, this shell has not been able to be tested on two separate machines, and has only been tested with the localhost connection. This has been due mainly to a lack of compatible hardware. A test with a pair of networked virtual machines is likely in the near future, assuming I maintain enough interest in this project. 
+- As of 4 August 2022, this reverse shell has not been able to be tested on two separate machines, and has only been tested with the localhost connection. This is due mainly to a lack of compatible hardware to set up the connection. A test with a pair of networked virtual machines is likely in the near future, assuming I maintain enough interest in this project. 
 
 ## Potential Improvements: 
 
@@ -98,4 +98,6 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
 ## Personal Note
 
-This project was written for fun and is intended mainly as a proof of concept. It was not meant for actual offensive security operations, especially given that "malicious R package" is a niche and unlikely way of gaining a foothold on a target computer. Off the top of my head I can see this project being used to show what can happen if an unsuspecting statistician loads just any R package and to showcase the importance of sticking to the R libraries vetted by CRAN. Besides that, all things considered this isn't a particularly powerful reverse shell. 
+This project was written for fun and was intended mainly as a proof of concept. It was not meant for actual offensive security operations, especially given that "malicious R package" is a niche and unlikely way of gaining a foothold on a target computer. Off the top of my head I can see this project being used to show what can happen if an unsuspecting statistician loads just any R package and to showcase the importance of sticking to the R libraries vetted by CRAN. Besides that, all things considered this isn't a particularly powerful reverse shell. 
+
+I didn't write this program with a specific target in mind. I wrote it because I could. And now, you can enjoy it too!
