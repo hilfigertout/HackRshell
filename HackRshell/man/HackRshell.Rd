@@ -1,19 +1,23 @@
-\name{client}
-\alias{client}
+\name{HackRshell}
 \alias{HackRshell}
-\alias{HackRShell}
 \alias{hackrshell}
 \alias{hackRshell}
-
+\alias{HackRShell}
+\alias{client}
+\alias{server}
 
 \title{
-The Client-side Function for the HackRshell Program.
+HackRShell - the R Reverse Shell
 }
 
 \description{
-This function connects back to a remote host specified the function arguments. If the server is listening on the remote host at the correct port, then this function will make the R session listen for commands entered from the server and will attempt to execute them. See the details section for a list of valid commands.
+This program spawns a reverse shell on a target's computer. The attacker first runs the server() function on their machine, which will start the server listening for connections. Once a target runs the client() function with the corrrect address and port numbers, the target's R session will hang and the attacker should see a connection to their computer with the prompt "Shell>". From there, the attacker can enter commands and they will execute on the target's R session. See the details section for a list of valid commands. Note that commands are case-sensitive.
+
+To end the session, the attacker sends the "exit"" command
 }
 \usage{
+server(host, port, secondaryPort)
+
 client(host, port, secondaryPort)
 }
 \arguments{
@@ -24,12 +28,12 @@ client(host, port, secondaryPort)
     The TCP port number of the listening process on the remote server, as an integer. Defaults to 4471 as an arbitrary choice.
   }
   \item{secondaryPort}{
-  The TCP port number that the server will listen on to download or upload files. See the download and upload commands below. Do not make this the same value as the other port argument. Defaults to 5472 as an arbitrary choice.
+  The TCP port number that the server will listen on to download or upload files. See the download and upload commands below. Do not make this the same value as the port argument. Defaults to 5472 as an arbitrary choice.
   }
 }
 \details{
 
-List of Commands (case-sensitive):
+List of Commands:
 
   pwd: print the current working directory
 
@@ -47,13 +51,13 @@ List of Commands (case-sensitive):
 
   exit: end the shell session and close the socket connection.
 
-  sys [command] [args]: Passes [command] with [args] to the system as a system call. For example, on Windows the "systeminfo" command is run with "sys systeminfo". See the R documentation for system() and system2() for how Windows and Unix-like OSes differ in how this command is executed.
+  sys [command] [args]: Passes [command] with [args] to the target's system as a system call. For example, on Windows the "systeminfo" command is run with "sys systeminfo". See the R documentation for system() and system2() for how Windows and Unix-like OSes differ in how this command is executed.
 
   All other strings will result in a "Command '_____' not recognized" response.
 
 }
 \value{
-This function does not return any value.
+These functions do not return any value.
 }
 \references{
 None

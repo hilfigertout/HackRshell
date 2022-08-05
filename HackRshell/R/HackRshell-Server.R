@@ -161,6 +161,3 @@ server <- function(host="localhost", port=4471, secondaryPort=5472) {
   close(socket)
   print("Socket closed")
 }
-
-server()
-

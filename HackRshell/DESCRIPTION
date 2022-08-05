@@ -1,0 +1,14 @@
+Package: HackRshell
+Type: Package
+Title: The R Reverse Shell
+Version: 0.1.0
+Author: Ian Roberts
+Maintainer: Ian Roberts <ijr2399@gmail.com>
+Description: This library implements a reverse shell program in R.
+    An attacker starts by running the server() function inside. Then,
+    when a target runs the client() function, the target's R session
+    will attempt to connect to the server and listen for commands to run.
+    See the HackRshell manual page for the list of commands. 
+License: GNU Lesser General Public License (LGPL) v2.1
+Encoding: UTF-8
+LazyData: true

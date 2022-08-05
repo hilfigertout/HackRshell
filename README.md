@@ -6,25 +6,31 @@ This project implements a basic reverse shell in R. When a target runs the `clie
 
 This reverse shell is written entirely in base R, with no additional packages needing installed. In addition, the *Completely.Innocent.Library* package is a custom-built malicious package designed exclusively to execute the `client()` function when the package is attached. This is to demonstrate how a target could unsuspectingly open the connection. It is not necessary to install this library to run the reverse shell, see the **Usage** section below. 
 
+This software is offered free of charge and open-source.
+
 ## Contents:
 
  - **README.md**
 
- - **LICENSE** - this software is under the Lesser GNU public license (LGPL). See the file for deatils.
+ - **LICENSE** - this software is under the GNU Lesser General public license (LGPL). See the file for deatils.
 
- - **HackRshell-Server.R** - This file contains the `server()` function that the user runs to listen for reverse shell connections.
+ - **HackRshell-Server.R** - This file contains the `server()` function that the user runs to listen for reverse shell connections. A user may either load the function and call it via the R terminal, or simply run `source("./HackRshell-Server.R")`, assuming the working directory contains this file.
 
- - **HackRshell-Client.R** - this file contains the `client()` function that the target runs to start the reverse shell session. While one can load the function and call it via the R terminal, running `source("./HackRshell-Client.R")` will do the same thing, assuming that the working directory contains HackRshell-Client.R.
+ - **HackRshell-Client.R** - this file contains the `client()` function that the target runs to start the reverse shell session. While one can load the function and call it via the R terminal, running `source("./HackRshell-Client.R")` will do the same thing, assuming that the working directory contains this file.
 
- - **Completely.Innocent.Library** - this folder contains the R project and all the data for a custom R package called "Completely.Innocent.Library". This package contains a *HackRshell-Client.R* file, identical to the one in the top level of the repository except for the function call at the end. This package was built to execute the `client()` function when the target installs the package and calls `library("Completely.Innocent.Library")`. You can see the code for this autorun in *Completely.Innocent.Library/R/zzz.R*.
+ - **HackRshell** - this folder contains the R project and all the data for the HackRshell custom package, which contains **HackRshell/R/HackRshell-Server.R** and **HackRshell/R/HackRshell-client.R**. These are nearly identical to the files in the top-level directory, except that they do not contain the function call, so `source()` will not run the functions in either of them. A user needs to run these themselves after installing and attaching this HackRshell package. 
 
- - **Completely.Innocent.Library_0.1.0.tar.gz** - a tarball of the *Completely.Innocent.Library* package for installation. You will need the rtools package to install this, which you can find [here](https://cran.r-project.org/bin/windows/Rtools/). Once that's downloaded, instructions for installing the package can be found in [this StackOverflow thread](https://stackoverflow.com/questions/4739837/how-do-i-install-an-r-package-from-the-source-tarball-on-windows).
+ - **HackRshell_0.1.0.tar.gz** - a compressed file of the *HackRshell* package, ready for installation. You will need the rtools package to install this, which you can find [here](https://cran.r-project.org/bin/windows/Rtools/). Once that's downloaded, instructions for installing the package can be found in [this StackOverflow thread](https://stackoverflow.com/questions/4739837/how-do-i-install-an-r-package-from-the-source-tarball-on-windows).
+
+ - **Completely.Innocent.Library** - this folder contains the R project and all the data for a custom R package called "Completely.Innocent.Library". This package contains a *HackRshell-Client.R* file, identical to the one in the top level of the repository except for the function call at the end. This package was built to execute the `client()` function when the target installs the package and calls `library("Completely.Innocent.Library")`. You can see the code for this autorun in **Completely.Innocent.Library/R/zzz.R**. 
+
+ - **Completely.Innocent.Library_0.1.0.tar.gz** - a compressed file of the *Completely.Innocent.Library* package, ready for installation. See above for installation instructions. 
 
 ## Usage: 
 
 To run this program, you will need to have R installed. To start the server, simply open an R session and call the `server()` function located in *HackRshell-Server.R*. This will start the server listening. From there it's simply a matter of waiting for someone to run the `client()` function with the correct address and port.
 
-Since it's safe to assume you are probably demonstrating this on your own machine, you can create a new R session and run the function yourself. You can either run the function in *HackRshell-Client.R*, or you can attach the malicious package with the command `library(Completely.Innocent.Library)`. This will automatically start the `client()` function with the parameters baked into the library, so if you want to change the ip address or ports that the server is on from the defaults, you will need to rebuild the library after every change. 
+Since it's safe to assume you are probably demonstrating this on your own machine, you can create a new R session and run the `client()` function yourself. You can either run the function in *HackRshell-Client.R*, or you can attach the malicious package with the command `library(Completely.Innocent.Library)`. This will automatically start the `client()` function with the parameters baked into the library, so if you want to change the ip address or ports that the server is on from the defaults, you will need to rebuild the library after every change. (The defaults are for running on localhost, i.e. two R sessions on one machine,)
 
 Once the `client()` function runs, the target's R session will hang and (if the connection goes through) you should see the following prompt on the server side:
 
@@ -42,21 +48,23 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
   - **(ls, dir)**: list the contents of the current directory. Note that the program currently does not distinguish clearly between directories and files, though the presence or absence of file extensions has thus far been a good way to tell.
 
-  - **cd \[directory name\]**: change the current working directory to \[directory name\].
+  - **cd \[directory name\]**: change the current working directory to \[directory name\]. If successful, the output to the terminal will be the directory that you were previously in.
 
   - **(rm, del) \[filename\]**: delete the file \[filename\] if it is currently in the working directory. This call cannot delete directories, not even empty directories. (To delete directories, consider "sys \[rm/del\] \[args\] \[filename\], see the sys command below.)
 
   - **(cat, type) \[filename\]**: view the contents of \[filename\] as text if it is in the working directory. Will not work on files that contain non-text characters. (To view the contents of these files in the terminal, consider "sys \[cat/type\] \[filename\]", see the sys command below.)
 
-  - **download \[filename\]**: opens a new socket connection with server port number secondaryPort and sends the file \[filename\] from the client to the server. This file will not be available to edit or delete until after the R session the server is running on terminates.
+  - **download \[filename\]**: opens a new socket connection with server port number secondaryPort and sends the file \[filename\] from the client to the server. This file will not be available to edit or delete until after the R session the server is running on terminates. This command can only upload files, not directories.
 
-  - **upload \[filename\]**: opens a new socket connection with server port number secondaryPort and sends the file \[filename\] from the server to the client. This file will not be available to edit or delete until after the R session the client is running on terminates.
-
-  - **exit**: end the shell session and close the socket connection.
+  - **upload \[filename\]**: opens a new socket connection with server port number secondaryPort and sends the file \[filename\] from the server to the client. This file will not be available to edit or delete until after the R session the client is running on terminates. This command can only upload files, not directories. 
 
   - **sys \[command\] \[args\]**: Passes \[command\] with \[args\] to the system as a system call. For example, on Windows the "systeminfo" command is run with "sys systeminfo". See the R documentation for system() and system2() for how Windows and Unix-like OSes differ in how this command is executed.
 
-  All other strings will result in a "Command '_____' not recognized" response.
+  - **exit**: end the shell session and close the socket connection.
+
+  
+
+All other strings will result in a "Command '_____' not recognized" response.
 
 ## Notes that You Might Want to Know
 
@@ -68,13 +76,11 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
 - If you upload or download a file using this shell, that file will not be able to be edited while the R session is active as it is considered still locked by the R session. This also prevents you from deleting a file after uploading or downloading it. In addition, for a file uploaded to the client, the data inside will not appear until the R session terminates, meaning that at present it is not possible to upload an additional payload and run it.
 
-- R does not appear to close any connections besides the main one after use, despite this code calling the `close()` function on all of them. This means that a warning will appear to the target after the shell terminates for every **upload**, **download**, or **(cat/type)** command called during the session. This isn't particularly stealthy, but these messages only seem to appear after the session terminates, which may be too late for the target to take any meaningful action. 
-
-- Sometimes clients just stop responding after trying a particularly sensitive command, especially a failed system call. I've tried to iron out as many cases as possible, but at the end of the day, most computers' environments are not friendly to reverse shells. 
+- Similarly, R does not appear to close any connections besides the main one after use, despite this code calling the `close()` function on all of them. This means that a warning will appear to the target after the shell terminates for every **upload**, **download**, or **(cat/type)** command called during the session. This isn't particularly stealthy, but these messages only seem to appear after the session terminates, which may be too late for the target to take any meaningful action.  
 
 - The target R session very obviously hangs when the reverse shell starts. This is something that listed in the next section as a potential improvement and is a likely next step, but the benefit of this library as it stands is that it runs entirely in base R. This means no additional packages are required to run this reverse shell on either the client or the server side. Parallel computing or process interaction packages would be required to spawn a new R session, though this can be camouflaged by adding these libraries as a dependency to the malicious package. 
 
-- As of 4 August 2022, this reverse shell has not been able to be tested on two separate machines, and has only been tested with the localhost connection. This is due mainly to a lack of compatible hardware to set up the connection. A test with a pair of networked virtual machines is likely in the near future, assuming I maintain enough interest in this project. 
+- As of 5 August 2022, this reverse shell has not been able to be tested on two separate machines, and has only been tested with the localhost connection. This is due mainly to a lack of compatible hardware to set up the connection. A test with a pair of networked virtual machines is likely in the near future, assuming I maintain enough interest in this project. 
 
 ## Potential Improvements: 
 
@@ -90,14 +96,20 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
 - Add the ability to download or upload directories recursively.
 
+- Add some sort of automated testing function or file. 
+
 - Somehow set up the .onAttach() function in zzz.R such that it can connect via a URL instead of an IP address. (Domain names are harder to change and harder to block than IP addresses.)
 
-- Obscure the traffic somehow such that it appears more innocuous than the text or data flying back and forth. (The search term here is "Covert Channels.")
+- Obscure the traffic somehow such that it appears more innocuous than the raw text or data of the reverse shell flying back and forth. (The search term here is "Covert Channels.")
 
 - Use a serverSocket() function instead of socketConnection() to handle multiple clients, possibly with multithreading libraries to handle each one. 
+
+- Write a Python implementation of the serve side, so the user doesn't need the R interpreter installed. (I've been trying, but getting the Python and R sockets to play nice is difficult. In particular, the download and upload commands don't work at all, the secondary connection always fails to open for reasons that I don't understand.)
 
 ## Personal Note
 
 This project was written for fun and was intended mainly as a proof of concept. It was not meant for actual offensive security operations, especially given that "malicious R package" is a niche and unlikely way of gaining a foothold on a target computer. Off the top of my head I can see this project being used to show what can happen if an unsuspecting statistician loads just any R package and to showcase the importance of sticking to the R libraries vetted by CRAN. Besides that, all things considered this isn't a particularly powerful reverse shell. 
 
 I didn't write this program with a specific target in mind. I wrote it because I could. And now, you can enjoy it too!
+
+#### Copyright (C) 2022 Ian Roberts

