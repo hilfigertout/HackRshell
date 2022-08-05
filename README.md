@@ -50,7 +50,7 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
   - **download \[filename\]**: opens a new socket connection with server port number secondaryPort and sends the file \[filename\] from the client to the server. This file will not be available to edit or delete until after the R session the server is running on terminates.
 
-  - **upload\[filename\]**: opens a new socket connection with server port number secondaryPort and sends the file \[filename\] from the server to the client. This file will not be available to edit or delete until after the R session the client is running on terminates.
+  - **upload \[filename\]**: opens a new socket connection with server port number secondaryPort and sends the file \[filename\] from the server to the client. This file will not be available to edit or delete until after the R session the client is running on terminates.
 
   - **exit**: end the shell session and close the socket connection.
 
@@ -68,6 +68,8 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
 - If you upload or download a file using this shell, that file will not be able to be edited while the R session is active as it is considered still locked by the R session. This also prevents you from deleting a file after uploading or downloading it. In addition, for a file uploaded to the client, the data inside will not appear until the R session terminates, meaning that at present it is not possible to upload an additional payload and run it.
 
+- R does not appear to close any connections besides the main one after use, despite this code calling the `close()` function on all of them. This means that a warning will appear to the target after the shell terminates for every **upload**, **download**, or **(cat/type)** command called during the session. This isn't particularly stealthy, but these messages only seem to appear after the session terminates, which may be too late for the target to take any meaningful action. 
+
 - Sometimes clients just stop responding after trying a particularly sensitive command, especially a failed system call. I've tried to iron out as many cases as possible, but at the end of the day, most computers' environments are not friendly to reverse shells. 
 
 - The target R session very obviously hangs when the reverse shell starts. This is something that listed in the next section as a potential improvement and is a likely next step, but the benefit of this library as it stands is that it runs entirely in base R. This means no additional packages are required to run this reverse shell on either the client or the server side. Parallel computing or process interaction packages would be required to spawn a new R session, though this can be camouflaged by adding these libraries as a dependency to the malicious package. 
@@ -82,7 +84,7 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
 - Create a separate folder when the server starts up exculsively for files downloaded during the session. 
 
-- Refactor the code so that the client() function isn't just one giant function, but instead calls smaller functions for each of its tasks. (In progress!)
+- Refactor the server-side code so that the client() function isn't just one giant function, but instead calls smaller functions for each of its tasks. (Client's already done, now for the server.)
 
 - Create a similar package with a multiprocessing library to transparently spawn a new process or R session in the background when the client() function si run, thus allowing the client to execute without obviously hanging the victim's R session. This could all be handled in the .onAttach() function and keeping the client() function the same. 
 
