@@ -15,6 +15,11 @@
     # License along with this library; if not, write to the Free Software
     # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
+#Helper function, closes without a warning message if connection is
+#null, which is initially is.
+safeClose<- function(con) {
+  if (!is.null(con)) {close(con)}
+}
 
 server <- function(host="localhost", port=4471, secondaryPort=5472) {
   socket <- socketConnection(host=host, port=port, blocking=TRUE, server=TRUE, encoding="utf-8", timeout=300, open="r+")
@@ -26,7 +31,7 @@ server <- function(host="localhost", port=4471, secondaryPort=5472) {
   while(!exiting) {
     cat(fromClient)
     command <- readline(prompt="Shell> ")
-    if (!is.na(command)) {
+    if (command != "") {
       writeLines(command, socket)
       firstWord <- strsplit(command, " ", fixed=TRUE)[[1]][1]
 
@@ -38,27 +43,29 @@ server <- function(host="localhost", port=4471, secondaryPort=5472) {
         abortDownload <- FALSE
         fileSize <- as.integer(readLines(socket, 1))
         fileName <- substring(command, 10)
+        fileSocket <- NULL
         fileData <- tryCatch({
-          if (fileSize < 0) {
+          if (is.na(fileSize) || fileSize < 0) {
             signalCondition(simpleError("Download Aborted by Client"))
           }
           fileSocket <- socketConnection(host=host, port=secondaryPort, blocking=TRUE, server=TRUE, timeout=300, open="rb")
           readBin(fileSocket, "raw", n=fileSize)
         }, error=function(e){
-          abortDownload <- TRUE
+          abortDownload <<- TRUE
           print(paste("Server error receiving file data: ", e$message))
         }, finally=function() {
-          close(fileSocket)
+          safeClose(fileSocket)
         })
-
         if (!abortDownload) {
+          outFile <- NULL
           tryCatch({
             outFile = file(fileName, "wb")
             writeBin(as.raw(fileData), outFile, size=1)
+            print(paste("Downloaded ", fileSize, "bytes"))
           }, error=function(e){
             print(paste("Error writing received data: ", e$message))
           }, finally=function() {
-            close(outFile)
+            safeClose(outFile)
           })
         }
       }
@@ -67,13 +74,18 @@ server <- function(host="localhost", port=4471, secondaryPort=5472) {
         fileName <- substring(command, 8)
         abortUpload <- FALSE
         fileSize <- 0
+        targetFile <- NULL
         fileData <- tryCatch({
           if (!file.exists(fileName)) {
             signalCondition(simpleError("File not found"))
           }
-          fileSize <- as.integer(file.info(fileName, extra_cols=FALSE)$size)
+          fileInfo <- file.info(fileName, extra_cols=FALSE)
+          fileSize <- as.integer(fileInfo$size)
           #Slight overestimate to compensate for floating point rounding error.
           #File size is saved as a float in file.info.
+          if (fileInfo$isdir) {
+            signalCondition(simpleError("That is a directory, this command can only upload files."))
+          }
           if (fileSize*1.01 >= 2^31) {
             signalCondition(simpleError("File too large to send"))
           }
@@ -82,11 +94,11 @@ server <- function(host="localhost", port=4471, secondaryPort=5472) {
         }, error=function(e){
           print(paste("Error loading file: ", e$message))
           writeLines("-1", socket)
-          abortUpload <- TRUE
+          abortUpload <<- TRUE
         }, finally=function(){
-          close(targetFile)
+          safeClose(targetFile)
         })
-
+        uploadSocket <- NULL
         if(!abortUpload) {
           writeLines(toString(fileSize), socket)
           tryCatch({
@@ -96,13 +108,15 @@ server <- function(host="localhost", port=4471, secondaryPort=5472) {
           }, error=function(e){
             print(paste("Error uploading file to client: ", e$message))
           }, finally=function(){
-            close(uploadSocket)
+            safeClose(uploadSocket)
           })
+        } else {
+          print("Upload aborted")
         }
       }
     }
 
-    if (!exiting) {
+    if (!exiting && command != "") {
       fromClient <- readLines(socket, 1)
       fromClient <- gsub("%&%", "\n", fixed=TRUE, fromClient)
     }

