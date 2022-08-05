@@ -2,7 +2,7 @@
 
 ## The R Reverse Shell 
 
-This project implements a basic reverse shell in R. When a target runs the `client()` function in this package (either directly or on attachment of the package), their R session will attempt to reach out to a server running the `server()` function in *HackRshell-HackRshell-Server.R*. If the server is listening, the user behind the server will then be able to send commands to traverse the target's directory, upload or exfiltrate files, and make system calls. A full list of commands can be found below.
+This project implements a basic reverse shell in R. When a target runs the `client()` function in this package (either directly or on attachment of the package), their R session will attempt to reach out to a server running the `server()` function in **HackRshell-Server.R**. If the server is listening, the user behind the server will then be able to send commands to traverse the target's directory, upload or exfiltrate files, and make system calls. A full list of commands can be found below.
 
 This reverse shell is written entirely in base R, with no additional packages needing installed. In addition, the *Completely.Innocent.Library* package is a custom-built malicious package designed exclusively to execute the `client()` function when the package is attached. This is to demonstrate how a target could unsuspectingly open the connection. It is not necessary to install this library to run the reverse shell, see the **Usage** section below. 
 
@@ -62,13 +62,11 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
   - **exit**: end the shell session and close the socket connection.
 
-  
-
 All other strings will result in a "Command '_____' not recognized" response.
 
 ## Notes that You Might Want to Know
 
-- The command socket has a timeout of 5 minutes, increased from the R default of 1 minute. If one or both sockets is waiting on communication for 5 minutes, they will skip past that communication with a null value. There are some safeguards in place to prevent this from causing a crash, and in general it should be safe to let the program idle for a while, but you may see a few null reads pop up on your screen. 
+- The command socket has a timeout of 24 hours, increased from the R default of 1 minute. So don't leave the reverse shell idle for longer than 24 hours, or you will silently lose the connection.
 
 -  In order to keep the transmissions to a single line for the `readLines()` function, newline characters sent from the client are encoded as the string `%&%` before being sent to the server for decoding. While it's not likely to come up, if a command output happens to contain that string naturally, it will get replaced with a newline. (Downloading and uploading files are not affected by this, as those functions use a separate socket and separate read/write functions.)
 

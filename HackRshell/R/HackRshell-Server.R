@@ -119,7 +119,7 @@ printHelpMessage <- function(validCommands) {
 server <- function(host="localhost", port=4471, secondaryPort=5472) {
   validCommands <- c("help", "pwd", "dir", "ls", "cd", "rm", "del",
                       "cat", "type", "download", "upload", "sys", "exit")
-  socket <- socketConnection(host=host, port=port, blocking=TRUE, server=TRUE, encoding="utf-8", timeout=300, open="r+")
+  socket <- socketConnection(host=host, port=port, blocking=TRUE, server=TRUE, encoding="utf-8", timeout=86400, open="r+")
   #Ensures the sockets get closed
   on.exit(tryCatch(close(socket), error=function(e){}, warning=function(w){}))
   fromClient <- readLines(socket, 1)

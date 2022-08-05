@@ -191,7 +191,7 @@ makeSystemCall <- function(rawCommand, command) {
 
 
 client <- function(host="localhost", port=4471, secondaryPort=5472) {
-  socket <- socketConnection(host=host, port=port, server=FALSE, blocking=TRUE, encoding="utf-8", timeout=300, open="r+")
+  socket <- socketConnection(host=host, port=port, server=FALSE, blocking=TRUE, encoding="utf-8", timeout=86400, open="r+")
 
   #Ensures that the socket gets closed silently, even if program fails
   on.exit(tryCatch(close(socket), error=function(e){}, warning=function(w){}))
