@@ -22,7 +22,7 @@ safeClose<- function(con) {
 }
 
 
-changeDir <- function(command) {
+changeDir <- function(rawCommand) {
   toServer <- tryCatch( {
     dirname <- substring(rawCommand, 4)
     if (!dir.exists(dirname)) {
@@ -69,7 +69,7 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
       }
 
       else if (command[1] == "cd") {
-        toServer <-
+        toServer <- changeDir(rawCommand)
       }
 
       else if (command[1] == "del" || command[1] == "rm") {
