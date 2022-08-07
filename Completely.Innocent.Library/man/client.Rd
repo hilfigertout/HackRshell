@@ -1,5 +1,5 @@
-\name{client}
-\alias{client}
+\name{HackRshell client library}
+\alias{hRs.client}
 \alias{HackRshell}
 \alias{HackRShell}
 \alias{hackrshell}
@@ -14,7 +14,7 @@ The Client-side Function for the HackRshell Program.
 This function connects back to a remote host specified the function arguments. If the server is listening on the remote host at the correct port, then this function will make the R session listen for commands entered from the server and will attempt to execute them. See the details section for a list of valid commands.
 }
 \usage{
-client(host, port, secondaryPort)
+hRs.client(host, port, secondaryPort)
 }
 \arguments{
   \item{host}{
@@ -68,11 +68,11 @@ Ian Roberts
 }
 
 \examples{
-client()
+hRs.client()
 
-client("192.168.0.1", 3343, 4454)
+hRs.client("192.168.0.1", 3343, 4454)
 
-client("127.0.0.1")
+hRs.client("127.0.0.1")
 }
 \keyword{ IO }
 

