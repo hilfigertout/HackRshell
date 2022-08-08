@@ -40,7 +40,7 @@ Shell>
 
 From here you can start running the commands below. Once you are finished, use the `exit` command to close the socket and the shell. If the server is not up and listening, then the connection will fail and the `hRs.client()` function will terminate. If the target loaded the library to call `hRs.client()`, this will happen without any notice. If the target ran the `hRs.client()` function manually, they will get a warning that the connection failed.
 
-## Function Syntax
+## Function Definitions
 
 This can also be found in the R documentation for the HackRshell package. After installing the package, run `?HackRshell` to see the docs.
 
@@ -62,7 +62,7 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
   - **cd \[directory name\]**: change the current working directory to \[directory name\]. If successful, the output to the terminal will be the directory that you were previously in.
 
-  - **(rm, del) \[filename\]**: delete the file \[filename\] if it is currently in the working directory. This call cannot delete directories, not even empty directories. (To delete directories, consider "sys \[rm/del\] \[args\] \[filename\], see the sys command below.)
+  - **(rm, del) \[filename\]**: delete the file \[filename\] if it is currently in the working directory. This call cannot delete directories, not even empty directories. (To delete directories, consider "sys \[rm/del\] \[args\] \[filename\]", see the sys command below.)
 
   - **(cat, type) \[filename\]**: view the contents of \[filename\] as text if it is in the working directory. Will not work on files that contain non-text characters. (To view the contents of these files in the terminal, consider "sys \[cat/type\] \[filename\]", see the sys command below.)
 
