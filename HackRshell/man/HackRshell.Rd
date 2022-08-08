@@ -45,9 +45,9 @@ List of Commands:
 
   (cat, type) [filename]: view the contents of [filename] as text if it is in the working directory. Will not work on files that contain non-text characters. If you wish to view the contents of these files in the terminal, see the sys command below.
 
-  download [filename]: opens a new socket connection with server port number secondaryPort and sends the file [filename] from the client to the server. This file will not be available to edit or delete until after the R session the server is running on terminates. This function can only download files, not directories.
+  download [filename]: opens a new socket connection with server port number secondaryPort and sends the file [filename] from the client to the server. This function can only download files, not directories.
 
-  upload[filename]: opens a new socket connection with server port number secondaryPort and sends the file [filename] from the server to the client. This file will not be available to edit or delete until after the R session the client is running on terminates. This function can only upload files, not directories.
+  upload[filename]: opens a new socket connection with server port number secondaryPort and sends the file [filename] from the server to the client. This function can only upload files, not directories.
 
   exit: end the shell session and close the socket connection.
 
@@ -68,6 +68,9 @@ Ian Roberts
 \note{
 
   In order to keep the transmissions to a single line for the readLines() function, newline characters sent from the client are encoded as the string "\%&\%" before being sent to the server for decoding. While it's not likely to come up, if a command output contains that string, it will get replaced with a newline. (Downloading and uploading files are not affected by this, as those functions use a separate socket and separate read/write functions.)
+
+
+  Also, the command socket has a timeout of 24 hours. (Up from the R default of 1 minute.) So do not leave a reverse shell session idle for over 24 hours, or you will silently lose the connection.
 
 }
 

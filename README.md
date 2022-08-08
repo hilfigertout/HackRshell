@@ -2,9 +2,9 @@
 
 ## The R Reverse Shell 
 
-This project implements a basic reverse shell in R. When a target runs the `hRs.client()` function in this package (either directly or on attachment of the package), their R session will attempt to reach out to a server running the `hRs.server()` function in **HackRshell-Server.R**. If the server is listening, the user behind the server will then be able to send commands to traverse the target's directory, upload or exfiltrate files, and make system calls. A full list of commands can be found below.
+This project implements a basic reverse shell in R. When a target runs the `hRs.client()` function in this package (either directly or on attachment of the *Completely.Innocent.Library* package), their R session will attempt to reach out to a server running the `hRs.server()` function. If the server is listening, the user behind the server will then be able to send commands to traverse the target's directory, upload or exfiltrate files, and make system calls. A full list of commands can be found below.
 
-This reverse shell is written entirely in base R, with no additional packages needing installed. In addition, the *Completely.Innocent.Library* package is a custom-built malicious package designed exclusively to execute the `hRs.client()` function when the package is attached. This is to demonstrate how a target could unsuspectingly open the connection. It is not necessary to install this library to run the reverse shell, see the **Usage** section below. 
+This reverse shell is written entirely in base R, with no additional packages needing to be installed. (Even installing the *HackRshell* package is optional if you run the source files instead.) The *Completely.Innocent.Library* package is a custom-built malicious package designed exclusively to execute the `hRs.client()` function when the package is attached. This is to demonstrate how a target could unsuspectingly open the connection. It is not necessary to install this library to run the reverse shell, see the **Usage** section below. 
 
 This software is offered free of charge and open-source.
 
@@ -18,11 +18,11 @@ This software is offered free of charge and open-source.
 
  - **HackRshell-Client.R** - this file contains the `hRs.client()` function that the target runs to start the reverse shell session. While one can load the function and call it via the R terminal, running `source("./HackRshell-Client.R")` will do the same thing, assuming that the working directory contains this file.
 
- - **HackRshell** - this folder contains the R project and all the data for the HackRshell custom package, which contains a **HackRshell/R/HackRshell-Server.R** file and a **HackRshell/R/HackRshell-client.R** file. These are nearly identical to the files in the top-level directory, except that they do not contain the function call, so `source()` will not run the functions in either of them. A user needs to run the functions themselves after installing and attaching this HackRshell package. This package will *not* start the reverse shell when loaded with the `library(HackRshell)` call
+ - **HackRshell** - this folder contains the R project and all the data for the HackRshell custom package, which contains a **HackRshell/R/HackRshell-Server.R** file and a **HackRshell/R/HackRshell-client.R** file. These are nearly identical to the files in the top-level directory, except that they do not contain the function call, so `source()` will not run the functions in either of them. A user needs to run the functions themselves after installing and attaching this HackRshell package. This package will *not* start the reverse shell when loaded with the `library(HackRshell)` call. 
 
  - **HackRshell_0.1.0.tar.gz** - a compressed file of the *HackRshell* package, ready for installation. You will need the rtools package to install this, which you can find [here](https://cran.r-project.org/bin/windows/Rtools/). Once that's downloaded, instructions for installing the package can be found in [this StackOverflow thread](https://stackoverflow.com/questions/4739837/how-do-i-install-an-r-package-from-the-source-tarball-on-windows).
 
- - **Completely.Innocent.Library** - this folder contains the R project and all the data for a custom R package called "Completely.Innocent.Library". This package contains a **HackRshell-Client.R** file, identical to the one in the top level of the repository except with the function call at the end removed. This package was built to execute the `hRs.client()` function when the target installs the package and calls `library("Completely.Innocent.Library")`. You can see the code for this autorun in **Completely.Innocent.Library/R/zzz.R**. this package *will* start the reverse shell when loaded with the `library()` function. Note that when this package is attached, it will print "Loading library... (this can sometimes take several minutes)". This is completely false; the statement is meant to buy the attacker some time to use the reverse shell. 
+ - **Completely.Innocent.Library** - this folder contains the R project and all the data for a custom R package called *Completely.Innocent.Library*. This package contains a **HackRshell-Client.R** file, identical to the one in the top level of the repository except with the function call at the end removed. This package was built to execute the `hRs.client()` function when the target installs the package and calls `library("Completely.Innocent.Library")`. You can see the code for this autorun in **Completely.Innocent.Library/R/zzz.R**. this package *will* start the reverse shell when loaded with the `library()` function. Note that when this package is attached, it will print "Loading library... (this can sometimes take several minutes)". (This is completely false; the statement is meant to buy the attacker some time to use the reverse shell.)
 
  - **Completely.Innocent.Library_0.1.0.tar.gz** - a compressed file of the *Completely.Innocent.Library* package, ready for installation. See above for installation instructions. 
 
@@ -40,6 +40,18 @@ Shell>
 
 From here you can start running the commands below. Once you are finished, use the `exit` command to close the socket and the shell. If the server is not up and listening, then the connection will fail and the `hRs.client()` function will terminate. If the target loaded the library to call `hRs.client()`, this will happen without any notice. If the target ran the `hRs.client()` function manually, they will get a warning that the connection failed.
 
+## Function Syntax
+
+This can also be found in the R documentation for the HackRshell package. After installing the package, run `?HackRshell` to see the docs.
+
+```
+hRs.server(host="localhost", port=4471, secondaryPort=5472)
+
+hRs.client(host="localhost", port=4471, secondaryPort=5472)
+```
+
+Where `host` is the IPv4 address of the server, `port` is the TCP port number the server will listen on and send commands with, and `secondaryPort` is the port number the server will use to download or upload files. 
+
 ## List of Commands:
 
 Commands are case-sensitive. Parentheses indicate multiple names for the same command.
@@ -54,9 +66,9 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
   - **(cat, type) \[filename\]**: view the contents of \[filename\] as text if it is in the working directory. Will not work on files that contain non-text characters. (To view the contents of these files in the terminal, consider "sys \[cat/type\] \[filename\]", see the sys command below.)
 
-  - **download \[filename\]**: opens a new socket connection with server port number secondaryPort and sends the file \[filename\] from the client to the server. This file will not be available to edit or delete until after the R session the server is running on terminates. This command can only upload files, not directories.
+  - **download \[filename\]**: opens a new socket connection with server port number `secondaryPort` and sends the file \[filename\] from the client to the server. This command can only upload files, not directories.
 
-  - **upload \[filename\]**: opens a new socket connection with server port number secondaryPort and sends the file \[filename\] from the server to the client. This file will not be available to edit or delete until after the R session the client is running on terminates. This command can only upload files, not directories. 
+  - **upload \[filename\]**: opens a new socket connection with server port number `secondaryPort` and sends the file \[filename\] from the server to the client. This command can only upload files, not directories. 
 
   - **sys \[command\] \[args\]**: Passes \[command\] with \[args\] to the system as a system call. For example, on Windows the "systeminfo" command is run with "sys systeminfo". See the R documentation for system() and system2() for how Windows and Unix-like OSes differ in how this command is executed.
 
@@ -85,6 +97,8 @@ All other strings will result in a "Command '_____' not recognized" response.
 - Create a separate folder when the server starts up exculsively for files downloaded during the session. 
 
 - Create a similar package with a multiprocessing library to transparently spawn a new process or R session in the background when the hRs.client() function si run, thus allowing the client to execute without obviously hanging the victim's R session. This could all be handled in the .onAttach() function and keeping the hRs.client() function the same. 
+
+- Add the ability to change `secondaryPort` remotely, mid-session. 
 
 - Add the ability to download or upload directories recursively.
 
