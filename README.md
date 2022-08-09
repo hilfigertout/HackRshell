@@ -90,13 +90,13 @@ All other strings will result in a "Command '_____' not recognized" response.
 
 ## Potential Improvements: 
 
-- Find some way to handle warnings in the tryCatch() statements such that the *correct output is still returned*, the warning is either appended to the return string or just ignored, and the client machine *does not print the warning*. (Currently, warnings must be handled the same way as errors, stopping the command and returning the warning message. The issue is that if warnings are not handled in this way, then either the command's output to the server is incorrect or the warning gets printed to the client's machine.)
+- Find some way to handle warnings in the `tryCatch()` statements such that the *correct output is still returned*, the warning is either appended to the return string or just ignored, and the client machine *does not print the warning*. (Currently, warnings must be handled the same way as errors, stopping the command and returning the warning message. The issue is that if warnings are not handled in this way, then either the command's output to the server is incorrect or the warning gets printed to the client's machine.)
 
 - Add a clear distinction between what is and isn't a directory when listing files.
 
 - Create a separate folder when the server starts up exculsively for files downloaded during the session. 
 
-- Create a similar package with a multiprocessing library to transparently spawn a new process or R session in the background when the hRs.client() function si run, thus allowing the client to execute without obviously hanging the victim's R session. This could all be handled in the .onAttach() function and keeping the hRs.client() function the same. 
+- Create a similar package with a multiprocessing library to transparently spawn a new process or R session in the background when the `hRs.client()` function is run, thus allowing the client to execute without obviously hanging the victim's R session. This could all be handled in the `.onAttach()` function and keeping the `hRs.client()` function the same. 
 
 - Add the ability to change `secondaryPort` remotely, mid-session. 
 
@@ -104,11 +104,11 @@ All other strings will result in a "Command '_____' not recognized" response.
 
 - Add some sort of automated testing function or file. 
 
-- Somehow set up the .onAttach() function in zzz.R such that it can connect via a URL instead of an IP address. (Domain names are less susceptible to change and harder to block than IP addresses.)
+- Somehow set up the `.onAttach()` function in *Completely.Innocent.Library/R/zzz.R* such that it can connect via a URL instead of an IP address. (Domain names are less susceptible to change and harder to block than IP addresses.)
 
 - Obscure the traffic somehow such that it appears more innocuous than the raw text or data of the reverse shell flying back and forth. (The search term here is "Covert Channels.")
 
-- Use a serverSocket() function instead of socketConnection() to handle multiple clients, possibly with multithreading libraries to handle each one. 
+- Use a `serverSocket()` function instead of `socketConnection()` to handle multiple clients, possibly with multithreading libraries to handle each one. 
 
 - Write a Python implementation of the serve side, so the user doesn't need the R interpreter installed. (I've been trying, but getting the Python and R sockets to play nice is difficult. In particular, the download and upload commands don't work at all, the secondary connection always fails to open for reasons that I don't understand.)
 
