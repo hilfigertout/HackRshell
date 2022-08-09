@@ -22,7 +22,7 @@ This software is offered free of charge and open-source.
 
  - **HackRshell_0.1.0.tar.gz** - a compressed file of the *HackRshell* package, ready for installation. You will need the rtools package to install this, which you can find [here](https://cran.r-project.org/bin/windows/Rtools/). Once that's downloaded, instructions for installing the package can be found in [this StackOverflow thread](https://stackoverflow.com/questions/4739837/how-do-i-install-an-r-package-from-the-source-tarball-on-windows).
 
- - **Completely.Innocent.Library** - this folder contains the R project and all the data for a custom R package called *Completely.Innocent.Library*. This package contains a **HackRshell-Client.R** file, identical to the one in the top level of the repository except with the function call at the end removed. This package was built to execute the `hRs.client()` function when the target installs the package and calls `library("Completely.Innocent.Library")`. You can see the code for this autorun in **Completely.Innocent.Library/R/zzz.R**. this package *will* start the reverse shell when loaded with the `library()` function. Note that when this package is attached, it will print "Loading library... (this can sometimes take several minutes)". (This is completely false; the statement is meant to buy the attacker some time to use the reverse shell.)
+ - **Completely.Innocent.Library** - this folder contains the R project and all the data for a custom R package called *Completely.Innocent.Library*. This package contains a **HackRshell-Client.R** file, identical to the one in the top level of the repository except with the function call at the end removed. This package was built to execute the `hRs.client()` function when the target installs the package and calls `library("Completely.Innocent.Library")`. You can see the code for this autorun in **Completely.Innocent.Library/R/zzz.R**. This package *will* start the reverse shell when loaded with the `library()` function. Note that when this package is attached, it will print "Loading library... (this can sometimes take several minutes)". This is completely false; the statement is meant to buy the attacker some time to use the reverse shell.
 
  - **Completely.Innocent.Library_0.1.0.tar.gz** - a compressed file of the *Completely.Innocent.Library* package, ready for installation. See above for installation instructions. 
 
@@ -30,7 +30,7 @@ This software is offered free of charge and open-source.
 
 To run this program, you will need to have R installed. To start the server, simply open an R session and call the `hRs.server()` function. This will start the server listening. From there it's simply a matter of waiting for someone to run the `hRs.client()` function with the correct address and port.
 
-Since it's safe to assume you are probably demonstrating this on your own machine, you can create a new R session and run the `hRs.client()` function yourself. You can either run the function manually, or you can attach the malicious package with the command `library(Completely.Innocent.Library)`. This will automatically start the `hRs.client()` function with the parameters baked into the library, so if you want to change the ip address or ports that the server is on from the defaults, you will need to rebuild the library after every change. (The defaults are for running on localhost, i.e. two R sessions on one machine,)
+Since it's safe to assume you are probably demonstrating this on your own machine, you can open a second R session and run the `hRs.client()` function yourself. You can either run the function manually, or you can attach the malicious package with the command `library(Completely.Innocent.Library)`. This will automatically start the `hRs.client()` function with the parameters baked into the library, so if you want to change the ip address or ports that the server is on from the defaults, you will need to rebuild the library after every change. (The defaults are for running on localhost, i.e. two R sessions on one machine,)
 
 Once the `hRs.client()` function runs, the target's R session will hang and (if the connection goes through) you should see the following prompt on the server side:
 
@@ -42,7 +42,7 @@ From here you can start running the commands below. Once you are finished, use t
 
 ## Function Definitions
 
-This can also be found in the R documentation for the HackRshell package. After installing the package, run `?HackRshell` to see the docs.
+These can also be found in the R documentation for the HackRshell package. After installing the package, run `?HackRshell` to see the docs.
 
 ```
 hRs.server(host="localhost", port=4471, secondaryPort=5472)
@@ -66,7 +66,7 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
   - **(cat, type) \[filename\]**: view the contents of \[filename\] as text if it is in the working directory. Will not work on files that contain non-text characters. (To view the contents of these files in the terminal, consider "sys \[cat/type\] \[filename\]", see the sys command below.)
 
-  - **download \[filename\]**: opens a new socket connection with server port number `secondaryPort` and sends the file \[filename\] from the client to the server. This command can only upload files, not directories.
+  - **download \[filename\]**: opens a new socket connection with server port number `secondaryPort` and sends the file \[filename\] from the client to the server. This command can only download files, not directories.
 
   - **upload \[filename\]**: opens a new socket connection with server port number `secondaryPort` and sends the file \[filename\] from the server to the client. This command can only upload files, not directories. 
 
@@ -84,13 +84,13 @@ All other strings will result in a "Command '_____' not recognized" response.
 
 ## Known Issues: 
 
-- The target R session very obviously hangs when the reverse shell starts. This is something that listed in the next section as a potential improvement and is a likely next step, but the benefit of this library as it stands is that it runs entirely in base R. This means no additional packages are required to run this reverse shell on either the client or the server side. Parallel computing or process interaction packages would be required to spawn a new R session, though this can be camouflaged by adding these libraries as a dependency to the malicious package. 
+- The target R session very obviously hangs when the reverse shell starts. This is something that is listed in the next section as a potential improvement and is a likely next step, but the benefit of this library as it stands is that it runs entirely in base R. This means no additional packages are required to run this reverse shell on either the client or the server side. Parallel computing or process interaction packages would be required to spawn a new R session, though this can be camouflaged by adding these libraries as a dependency to the malicious package. 
 
-- As of 5 August 2022, this reverse shell has not been able to be tested on two separate machines, and has only been tested with the localhost connection. This is due mainly to a lack of compatible hardware to set up the connection. A test with a pair of networked virtual machines is likely in the near future, assuming I maintain enough interest in this project. 
+- As of 9 August 2022, this reverse shell has not been able to be tested on two separate machines, and has only been tested with the localhost connection. This is due mainly to a lack of compatible hardware to set up the connection. A test with a pair of networked virtual machines is likely in the near future, assuming I maintain enough interest in this project. 
 
 ## Potential Improvements: 
 
-- Find some way to handle warnings in the tryCatch() statements such that the *correct output is still returned*, the warning is either appended to the return string or just ignored, and the client machine *does not print the warning*. 
+- Find some way to handle warnings in the tryCatch() statements such that the *correct output is still returned*, the warning is either appended to the return string or just ignored, and the client machine *does not print the warning*. (Currently, warnings must be handled the same way as errors, stopping the command and returning the warning message. The issue is that if warnings are not handled in this way, then either the command's output to the server is incorrect or the warning gets printed to the client's machine.)
 
 - Add a clear distinction between what is and isn't a directory when listing files.
 
@@ -100,7 +100,7 @@ All other strings will result in a "Command '_____' not recognized" response.
 
 - Add the ability to change `secondaryPort` remotely, mid-session. 
 
-- Add the ability to download or upload directories recursively.
+- Add the ability to download or upload directories recursively. (R does support recursive functions, so this might not be too difficult.)
 
 - Add some sort of automated testing function or file. 
 
