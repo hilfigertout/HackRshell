@@ -86,7 +86,9 @@ All other strings will result in a "Command '_____' not recognized" response.
 
 - The target R session very obviously hangs when the reverse shell starts. This is something that is listed in the next section as a potential improvement and is a likely next step, but the benefit of this library as it stands is that it runs entirely in base R. This means no additional packages are required to run this reverse shell on either the client or the server side. Parallel computing or process interaction packages would be required to spawn a new R session, though this can be camouflaged by adding these libraries as a dependency to the malicious package. 
 
-- As of 10 August 2022, this reverse shell has not been able to be tested on two separate physical machines. This is due mainly to a lack of compatible hardware to set up the connection. Tests with a pair of networked virtual machines have been performed.
+- On Linux (at least, on Ubuntu 22.04), a failed system call results in an un-catchable warning printed to the user's terminal. This did not occur during tests in the Windows 11 environment. 
+
+- As of 10 August 2022, this reverse shell has not been able to be tested on two separate physical machines. This is due mainly to a lack of compatible hardware to set up the connection. Tests with a pair of networked virtual machines have been performed successfully.
 
 ## Potential Improvements: 
 
